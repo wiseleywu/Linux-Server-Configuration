@@ -22,11 +22,22 @@ class MenuItem(Base):
     restaurant_id=Column(Integer, ForeignKey('restaurant.id'))
     restaurant=relationship(Restaurant)
 
+    @property
+    def serialize(self):
+        #Returns object data in easily serializeable format
+        return {
+            'name':self.name,
+            'description':self.description,
+            'id':self.id,
+            'price':self.price,
+            'course':self.course,
+        }
+
 # class Employee(Base):
 #     __tablename__='employee'
 #     name=Column(String(250), nullable=False)
 #     id=Column(Integer, primary_key=True)
-# 
+#
 # class Address(Base):
 #     __tablename__='address'
 #     street=Column(String(80), nullable=False)
