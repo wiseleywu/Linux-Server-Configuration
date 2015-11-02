@@ -14,6 +14,14 @@ class Antibody(Base):
     target=Column(String(80), nullable=False)
     picture=image_attachment('AntibodyImg')
 
+    @property
+    def serialize(self):
+        return {
+            'Antibody ID':self.id,
+            'Molecular Weight':self.weight,
+            'Target':self.target
+        }
+
 class AntibodyImg(Base, Image):
     __tablename__='antibody_img'
     antibody_id=Column(Integer, ForeignKey('antibody.id'), primary_key=True)
@@ -30,6 +38,19 @@ class AntibodyLot(Base):
     vialNumber=Column(Integer, nullable=False)
     antibody_id=Column(Integer, ForeignKey('antibody.id'))
     antibody=relationship('Antibody')
+
+    @property
+    def serialize(self):
+        return {
+            'Lot Number':self.id,
+            'Manufactured Date':str(self.date),
+            'Aggregate (%)':self.aggregate,
+            'Endotoxin (EU/mg)':self.endotoxin,
+            'Concentration (mg/mL)':self.concentration,
+            'Vial Volume (mL)':self.vialVolume,
+            'Available Vials':self.vialNumber,
+            'Antibody ID':self.antibody_id
+        }
 
 class Cytotoxin(Base):
     __tablename__='cytotoxin'
@@ -76,18 +97,6 @@ class ADCLot(Base):
     antibodylot=relationship(AntibodyLot)
     cytotoxin_lot_id=Column(Integer, ForeignKey('cytotoxin_lot.id'))
     cytotoxin_lot=relationship(CytotoxinLot)
-
-    @property
-    def serialize(self):
-        return {
-            'id':self.id,
-            'date':self.date,
-            'aggregate':self.aggregate,
-            'endotoxin':self.endotoxin,
-            'concentration':self.concentration,
-            'vialVolume':self.vialVolume,
-            'vialNumber':self.vialNumber,
-        }
 
 ############################insert at end of file #############################
 engine = create_engine('sqlite:///biologicscatalog.db')

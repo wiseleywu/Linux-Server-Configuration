@@ -5,6 +5,7 @@ from sqlalchemy_imageattach.entity import Image, image_attachment
 from sqlalchemy_imageattach.stores.fs import HttpExposedFileSystemStore
 from sqlalchemy_imageattach.context import store_context
 from database_setup import Base, Antibody, Cytotoxin, AntibodyImg, AntibodyLot, CytotoxinImg, CytotoxinLot, ADC, ADCLot
+import datetime
 
 app = Flask(__name__)
 fs_store = HttpExposedFileSystemStore('userimages', 'static/images/')
@@ -16,17 +17,16 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
-#Making an API Endpoint (GET Request)
-# @app.route('/restaurants/<int:restaurant_id>/menu/JSON')
-# def restaurantMenuJSON(restaurant_id):
-#     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
-#     items = session.query(MenuItem).filter_by(restaurant_id=restaurant.id)
-#     return jsonify(MenuItems=[i.serialize for i in items])
-#
-# @app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/JSON')
-# def restaurantMenuItemJSON(restaurant_id, menu_id):
-#     items = session.query(MenuItem).filter_by(id=menu_id).one()
-#     return jsonify(MenuItems=[items.serialize])
+# Making an API Endpoint (GET Request)
+@app.route('/antibodyLot/JSON')
+def antibodyLotJSON():
+    lots=session.query(AntibodyLot).all()
+    return jsonify(AntibodyLots=[i.serialize for i in lots])
+
+@app.route('/antibody/JSON')
+def antibodyJSON():
+    antibodies=session.query(Antibody).all()
+    return jsonify(Antibodies=[i.serialize for i in antibodies])
 
 @app.route('/')
 @app.route('/home')
@@ -35,7 +35,12 @@ def mainMenu():
 
 @app.route('/antibody')
 def antibodyMenu():
-    return render_template('antibody.html')
+    antibodies=session.query(Antibody).order_by(Antibody.name).all()
+    lots=session.query(AntibodyLot).all()
+    lotdict={}
+    for x in range(1,session.query(Antibody).count()+1):
+        lotdict[x]=session.query(AntibodyLot).filter(AntibodyLot.antibody_id==x).order_by(AntibodyLot.date).all()
+    return render_template('antibody.html', antibodies=antibodies, lotdict=lotdict, lots=lots)
 
 @app.route('/cytotoxin')
 def cytotoxinMenu():
@@ -45,58 +50,69 @@ def cytotoxinMenu():
 def adcMenu():
     return render_template('adc.html')
 
-@app.route('/templates/edit.html')
-def edit():
-    return render_template('edit.html')
+@app.route('/create', methods=['GET','POST'])
+def createAb():
+    if request.method == 'POST':
+        new=Antibody(name=request.form['name'], weight=request.form['weight'], target=request.form['target'])
+        session.add(new)
+        session.commit()
+        flash('Antibody Created')
+        return redirect(url_for('antibodyMenu'))
+    else:
+        return render_template('create-Ab.html')
 
-# @app.route('/')
-# @app.route('/restaurants/<int:restaurant_id>/menu')
-# def restaurantMenu(restaurant_id):
-#     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
-#     items = session.query(MenuItem).filter_by(restaurant_id=restaurant.id)
-#     return render_template('menu.html', restaurant=restaurant, items=items)
+@app.route('/create/<int:item_id>/', methods=['GET','POST'])
+def createAbLot(item_id):
+    if request.method == 'POST':
+        new=AntibodyLot(date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d'), aggregate=request.form['aggregate'], endotoxin=request.form['endotoxin'], concentration=request.form['concentration'], vialVolume=request.form['vialVolume'], vialNumber=request.form['vialNumber'], antibody_id=item_id)
+        session.add(new)
+        session.commit()
+        flash('Antibody Lot Created')
+        return redirect(url_for('antibodyMenu'))
+    else:
+        return render_template('create-ab-lot.html',item_id=item_id)
 
-# Task 1: Create route for newMenuItem function here
-# @app.route('/restaurants/<int:restaurant_id>/new/', methods=['GET','POST'])
-# def newMenuItem(restaurant_id):
-#     if request.method == 'POST':
-#         newItem=MenuItem(name=request.form['name'], restaurant_id=restaurant_id)
-#         session.add(newItem)
-#         session.commit()
-#         flash("new menu item created!")
-#         return redirect(url_for('restaurantMenu', restaurant_id=restaurant_id))
-#     else:
-#         return render_template('newmenuitem.html', restaurant_id=restaurant_id)
-#
-# # Task 2: Create route for editMenuItem function here
-#
-# @app.route('/restaurants/<int:restaurant_id>/<int:menu_id>/edit/', methods=['GET','POST'])
-# def editMenuItem(restaurant_id, menu_id):
-#     editedItem = session.query(MenuItem).filter_by(id=menu_id).one()
-#     if request.method == 'POST':
-#         if request.form['name']:
-#             editedItem.name = request.form['name']
-#         session.add(editedItem)
-#         session.commit()
-#         flash("Menu Item Edited")
-#         return redirect(url_for('restaurantMenu', restaurant_id=restaurant_id))
-#     else:
-#         return render_template(
-#             'editmenuitem.html', restaurant_id=restaurant_id, menu_id=menu_id, item=editedItem)
-#
-# # Task 3: Create a route for deleteMenuItem function here
-#
-# @app.route('/restaurants/<int:restaurant_id>/<int:menu_id>/delete/',methods=['GET','POST'])
-# def deleteMenuItem(restaurant_id, menu_id):
-#     deleteItem = session.query(MenuItem).filter_by(id=menu_id).one()
-#     if request.method == 'POST':
-#         session.delete(deleteItem)
-#         session.commit()
-#         flash("Menu Item Deleted")
-#         return redirect(url_for('restaurantMenu', restaurant_id=restaurant_id))
-#     else:
-#         return render_template(
-#             'deletemenuitem.html', restaurant_id=restaurant_id, menu_id=menu_id, item=deleteItem)
+@app.route('/editAb/<int:item_id>/', methods=['GET','POST'])
+def editAb(item_id):
+    editedItem = session.query(Antibody).filter_by(id=item_id).one()
+    if request.method == 'POST':
+        editedItem.name=request.form['name']
+        editedItem.weight=request.form['weight']
+        editedItem.target=request.form['target']
+        session.add(editedItem)
+        session.commit()
+        flash('Antibody Edited')
+        return redirect(url_for('antibodyMenu'))
+    else:
+        return render_template('edit-ab.html', item_id=item_id, editedItem=editedItem)
+
+@app.route('/editAbLot/<int:item_id>/', methods=['GET','POST'])
+def editAbLot(item_id):
+    editedItem = session.query(AntibodyLot).filter_by(id=item_id).one()
+    if request.method == 'POST':
+        editedItem.date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d')
+        editedItem.aggregate=request.form['aggregate']
+        editedItem.endotoxin=request.form['endotoxin']
+        editedItem.concentration=request.form['concentration']
+        editedItem.vialVolume=request.form['vialVolume']
+        editedItem.vialNumber=request.form['vialNumber']
+        session.add(editedItem)
+        session.commit()
+        flash('Antibody Lot Edited')
+        return redirect(url_for('antibodyMenu'))
+    else:
+        return render_template('edit-ab-lot.html',item_id=item_id, editedItem=editedItem)
+
+@app.route('/delete/<dbtype>/<int:item_id>/', methods=['GET','POST'])
+def delete(dbtype, item_id):
+    deleteItem=session.query(eval(dbtype)).filter_by(id=item_id).one()
+    if request.method == 'POST':
+        session.delete(deleteItem)
+        session.commit()
+        flash('Item Deleted')
+        return redirect(url_for('antibodyMenu'))
+    else:
+        pass
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

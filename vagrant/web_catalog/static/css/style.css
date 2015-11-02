@@ -11,3 +11,11 @@
 body {
   padding: 100px;
 }
+
+table td {
+  text-align: center;
+}
+
+table th {
+  text-align: center;
+}

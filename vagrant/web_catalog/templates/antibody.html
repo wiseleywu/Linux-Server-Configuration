@@ -5,17 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Main Page</title>
-
+    <title>Monoclonal Antibody</title>
     <!-- Bootstrap -->
     <link href={{ url_for('static', filename='css/bootstrap.min.css')}} rel="stylesheet">
     <link href={{ url_for('static', filename='css/style.css')}} rel="stylesheet">
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
   </head>
   <body>
     <nav class="navbar navbar-default navbar-fixed-top">
@@ -28,7 +21,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">Biologics Catalog</a>
+          <a class="navbar-brand" href="home">Biologics Catalog</a>
         </div>
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -49,17 +42,201 @@
     </nav>
     <div class="container">
       <div class="jumbotron">
-        <h1>Navbar example</h1>
-        <p>This example is a quick exercise to illustrate how the default, static and fixed to top navbar work. It includes the responsive CSS and HTML, so it also adapts to your viewport and device.</p>
-        <p>To see the difference between static and fixed top navbars, just scroll.</p>
-        <p>
-          <a class="btn btn-lg btn-primary" href="../../components/#navbar" role="button">View navbar docs »</a>
-        </p>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-success alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <h1>Antibody</h1>
+        <p>An antibody, also known as an immunoglobulin, is a large, Y-shape protein produced by plasma cells that is used by the immune system to identify and neutralize pathogens such as bacteria and viruses. The antibody recognizes a unique molecule of the harmful agent, called an antigen, via the variable region. Each tip of the "Y" of an antibody contains a paratope (analogous to a lock) that is specific for one particular epitope (similarly analogous to a key) on an antigen, allowing these two structures to bind together with precision. Using this binding mechanism, an antibody can tag a microbe or an infected cell for attack by other parts of the immune system, or can neutralize its target directly (for example, by blocking a part of a microbe that is essential for its invasion and survival). The ability of an antibody to communicate with the other components of the immune system is mediated via its Fc region (located at the base of the "Y"), which contains a conserved glycosylation site involved in these interactions. The production of antibodies is the main function of the humoral immune system.</p>
+        <p>Monoclonal antibodies are monospecific antibodies that are made by identical immune cells that are all clones of a unique parent cell, in contrast to polyclonal antibodies which are made from several different immune cells. Monoclonal antibodies have monovalent affinity, in that they bind to the same epitope.</p>
+        <P>Here in this catalog, you will only find the following monoclonal antibodies: </P>
+        {% for antibody in antibodies %}
+        <ul>
+          <h3><li><a href="#{{antibody.name}}">{{antibody.name}}</a></li></h3>
+          <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editAb{{ antibody.name }}">Edit</button>
+          <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteAb{{ antibody.id }}">Delete</button>
+        </ul>
+        {% endfor %}
+        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#create-ab">Add New Antibody</button>
       </div>
     </div>
+    {% for antibody in antibodies %}
+    <div class="container">
+      <div class="jumbotron">
+        <h3><a style="padding-top: 50px; margin-top: -50px;" name="{{antibody.name}}">{{antibody.name}}</a></h3>
+        <div class="container table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Manufactured Date</th>
+                <th>Lot Number</th>
+                <th>Aggregate (%)</th>
+                <th>Endotoxin (EU/mg)</th>
+                <th>Concentration (mg/mL)</th>
+                <th>Vial Volume (mL)</th>
+                <th>Available Vials</th>
+                <th>Edit</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lot in lotdict[antibody.id] %}
+              <tr>
+                <td>{{lot.date}}</td>
+                <td>{{lot.id}}</td>
+                <td>{{lot.aggregate}}</td>
+                <td>{{lot.endotoxin}}</td>
+                <td>{{lot.concentration}}</td>
+                <td>{{lot.vialVolume}}</td>
+                <td>{{lot.vialNumber}}</td>
+                <td><button type="button" class="btn btn-warning" data-toggle="modal" data-target="#edit{{ lot.id }}">Edit</button></td>
+                <td><button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteAbLot{{ lot.id }}">Delete</button></td>
+              </tr>
+              {% endfor %}
+              </tr>
+            </tbody>
+          </table>
+        <td><button type="button" class="btn btn-info" data-toggle="modal" data-target="#create-lot{{antibody.id}}">Create New Lot</button></td>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src={{ url_for('static', filename='js/bootstrap.min.js') }}></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<!-- Modal for creating new antibody type (redirect to create.html) -->
+    <div class="modal fade" id="create-ab" tabindex="-1" role="dialog" aria-labelledby="createLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="createLabel">Add New Antibody</h4>
+          </div>
+          <div class="modal-body">
+            <p id="createAb"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- Modal for creating new antibody lot (redirect to create-ab-lot.html) -->
+    {% for antibody in antibodies %}
+    <div class="modal fade" id="create-lot{{antibody.id}}" tabindex="-1" role="dialog" aria-labelledby="createLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="createLabel">Add New Lot</h4>
+          </div>
+          <div class="modal-body">
+            <p id="create{{antibody.id}}"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+<!-- Edit Antibody Type (and Modal) <- try to move this external -->
+    {% for antibody in antibodies %}
+    <div class="modal fade" id="editAb{{ antibody.name }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="editLabel">Edit Samples</h4>
+          </div>
+          <div class="modal-body">
+            <p id="editAb{{ antibody.id }}"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+<!-- Modal for editing antibody lot (redirect to edit-ab-lot.html) -->
+{% for lot in lots %}
+<div class="modal fade" id="edit{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="editLabel">Edit Items</h4>
+      </div>
+      <div class="modal-body">
+        <p id="editAbLot{{ lot.id }}"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+<!-- Delete Antibody Type -->
+    {% for antibody in antibodies %}
+    <div class="modal fade" id="deleteAb{{ antibody.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="deleteLabel">Delete Items</h4>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to delete <strong>{{antibody.name}}</strong>?</p>
+          </div>
+          <div class="modal-footer">
+            <form action="{{url_for('delete', dbtype='Antibody', item_id=antibody.id)}}" method="post">
+              <button name="delete" value="Delete" type="submit" class="btn btn-danger">Confirm</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+<!-- Delete Antibody Lot -->
+    {% for lot in lots %}
+    <div class="modal fade" id="deleteAbLot{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="deleteLabel">Delete Items</h4>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to delete <strong>lot number {{lot.id}}</strong>?</p>
+          </div>
+          <div class="modal-footer">
+            <form action="{{url_for('delete', dbtype='AntibodyLot', item_id=lot.id)}}" method="post">
+              <button name="delete" value="Delete" type="submit" class="btn btn-danger">Confirm</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+<!-- Scripts to open external pages within Modal -->
+    <script>$("#createAb").load("{{url_for('createAb')}}")</script>
+    {% for antibody in antibodies %}
+    <script>$("#create{{ antibody.id }}").load("{{url_for('createAbLot', item_id=antibody.id)}}")</script>
+    <script>$("#editAb{{ antibody.id }}").load("{{url_for('editAb', item_id=antibody.id)}}")</script>
+    {% endfor %}
+    {% for lot in lots %}
+    <script>$("#editAbLot{{ lot.id }}").load("{{url_for('editAbLot', item_id=lot.id)}}")</script>
+    {% endfor %}
   </body>
 </html>
