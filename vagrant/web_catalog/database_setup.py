@@ -1,6 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Float, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_imageattach.entity import Image, image_attachment
+from sqlalchemy_imageattach.context import store_context
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 
