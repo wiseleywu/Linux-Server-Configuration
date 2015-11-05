@@ -26,10 +26,10 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
-            <li><a href="home">Home</a></li>
-            <li class="active"><a href="antibody">Antibody<span class="sr-only">(current)</span></a></li>
-            <li><a href="cytotoxin">Cytotoxin</a></li>
-            <li><a href="ADC">Antibody-Drug Conjugate</a></li>
+            <li><a href="{{url_for('mainMenu')}}">Home</a></li>
+            <li class="active"><a href="{{url_for('antibodyMenu')}}">Antibody<span class="sr-only">(current)</span></a></li>
+            <li><a href="{{url_for('cytotoxinMenu')}}">Cytotoxin</a></li>
+            <li><a href="{{url_for('adcMenu')}}">Antibody-Drug Conjugate</a></li>
           </ul>
           <form class="navbar-form navbar-right" role="search">
             <div class="form-group">
@@ -59,11 +59,12 @@
         {% for antibody in antibodies %}
         <ul>
           <h3><li><a href="#{{antibody.name}}">{{antibody.name}}</a></li></h3>
+          <button type="button" class="btn btn-info" data-toggle="modal" data-target="#imgAb{{ antibody.id }}">Molecular Structure</button>
           <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editAb{{ antibody.name }}">Edit</button>
           <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteAb{{ antibody.id }}">Delete</button>
         </ul>
         {% endfor %}
-        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#create-ab">Add New Antibody</button>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-ab">Add New Antibody</button>
       </div>
     </div>
     {% for antibody in antibodies %}
@@ -102,7 +103,7 @@
               </tr>
             </tbody>
           </table>
-        <td><button type="button" class="btn btn-info" data-toggle="modal" data-target="#create-lot{{antibody.id}}">Create New Lot</button></td>
+        <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-lot{{antibody.id}}">Create New Lot</button></td>
         </div>
       </div>
     </div>
@@ -147,7 +148,19 @@
       </div>
     </div>
     {% endfor %}
-<!-- Edit Antibody Type (and Modal) <- try to move this external -->
+<!-- Open Antibody Images -->
+        {% for antibody in antibodies %}
+        <div class="modal fade" id="imgAb{{ antibody.id }}" tabindex="-1" role="dialog" aria-labelledby="showImg">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-body">
+                <p id="showAb{{ antibody.id }}"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+<!-- Edit Antibody Type (and Modal) -->
     {% for antibody in antibodies %}
     <div class="modal fade" id="editAb{{ antibody.name }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
       <div class="modal-dialog" role="document">
@@ -234,6 +247,7 @@
     {% for antibody in antibodies %}
     <script>$("#create{{ antibody.id }}").load("{{url_for('createAbLot', item_id=antibody.id)}}")</script>
     <script>$("#editAb{{ antibody.id }}").load("{{url_for('editAb', item_id=antibody.id)}}")</script>
+    <script>$("#showAb{{ antibody.id }}").load("{{ url_for('get_picture_url',item_id=antibody.id, table='antibody') }}")</script>
     {% endfor %}
     {% for lot in lots %}
     <script>$("#editAbLot{{ lot.id }}").load("{{url_for('editAbLot', item_id=lot.id)}}")</script>

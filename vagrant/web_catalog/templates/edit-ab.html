@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <body>
-    <form action="{{ url_for('editAb', item_id=item_id)}}" method="post">
+    <form action="{{ url_for('editAb', item_id=item_id)}}" method="post" enctype="multipart/form-data">
       <div class="form-group">
         <label for="name">Antibody Name</label>
         <input type="text" class="form-control" name="name" value="{{editedItem.name}}">
@@ -16,8 +16,8 @@
       </div>
       <div class="form-group">
         <label for="exampleInputFile">File input</label>
-        <input type="file" id="exampleInputFile">
-        <p class="help-block">Example block-level help text here.</p>
+        <input type="file" name="picture">
+        <p class="help-block">Supported file types: bmp, gif, jpg, jpeg, png</p>
       </div>
       <button type="submit" class="btn btn-default">Submit</button>
     </form>

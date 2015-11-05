@@ -4,13 +4,9 @@ from database_setup import Base, Antibody, Cytotoxin, AntibodyImg, AntibodyLot, 
 from sqlalchemy_imageattach.entity import Image, image_attachment
 from sqlalchemy_imageattach.context import store_context
 from random import randint
+from project import app, fs_store, session, get_picture_url, delete_picture
 import datetime
 import random
-
-engine = create_engine('sqlite:///biologicscatalog.db')
-Base.metadata.bind = engine
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
 
 def createRandomDate():
 	today = datetime.date.today()
@@ -112,6 +108,17 @@ def createADCLot():
 		session.add(adclot)
 		session.commit()
 
+def attach_picture(table, item_id, location):
+    try:
+        item=session.query(table).filter_by(id=item_id).one()
+        with store_context(fs_store):
+            with open(location,'rb') as f:
+                item.picture.from_file(f)
+                session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
 if __name__ == '__main__':
 	createAntibody()
 	createAntibodyLot()
@@ -119,4 +126,6 @@ if __name__ == '__main__':
 	createCytotoxinLot()
 	createADC()
 	createADCLot()
-	print 'done importing'
+	for x in ranage(1,6):
+		attach_picture(Antibody, x, 'static/images/antibody.png')
+	print 'Database Populated'

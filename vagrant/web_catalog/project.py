@@ -1,28 +1,30 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
+from werkzeug import secure_filename
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_imageattach.stores.fs import FileSystemStore
-from sqlalchemy_imageattach.context import store_context
+from sqlalchemy_imageattach.context import store_context, push_store_context, pop_store_context
 from database_setup import Base, Antibody, Cytotoxin, AntibodyImg, AntibodyLot, CytotoxinImg, CytotoxinLot, ADC, ADCLot
 import datetime
 import os
+from werkzeug import secure_filename
 from werkzeug.contrib.atom import AtomFeed
 
+UPLOAD_FOLDER = '/uploads'
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 fs_store = FileSystemStore(
     path='static/images/',
-    base_url='http://images.yourapp.com/'
-)
+    base_url='http://localhost:5000/static/images/')
 
 engine = create_engine('sqlite:///biologicscatalog.db')
 Base.metadata.bind = engine
-
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
-
-# def make_external(url):
-#     return urljoin(request.url_root, url)
 
 @app.route('/recent.atom')
 def recent_feed():
@@ -52,7 +54,7 @@ def antibodyJSON():
 def mainMenu():
     return render_template('home.html')
 
-@app.route('/antibody')
+@app.route('/antibody/')
 def antibodyMenu():
     antibodies=session.query(Antibody).order_by(Antibody.name).all()
     lots=session.query(AntibodyLot).all()
@@ -61,11 +63,22 @@ def antibodyMenu():
         lotdict[x]=session.query(AntibodyLot).filter(AntibodyLot.antibody_id==x).order_by(AntibodyLot.date).all()
     return render_template('antibody.html', antibodies=antibodies, lotdict=lotdict, lots=lots)
 
-@app.route('/cytotoxin')
+@app.route('/<table>/img/<int:item_id>/')
+def get_picture_url(item_id, table):
+    item=session.query(eval(table.capitalize())).filter_by(id=item_id).one()
+    with store_context(fs_store):
+        try:
+            picture_url = item.picture.locate()
+        except IOError:
+            print "No picture found for lot# %s" % str(item_id)
+            picture_url=''
+    return render_template('img.html',item=item, picture_url=picture_url)
+
+@app.route('/cytotoxin/')
 def cytotoxinMenu():
     return render_template('cytotoxin.html')
 
-@app.route('/ADC')
+@app.route('/ADC/')
 def adcMenu():
     return render_template('adc.html')
 
@@ -75,6 +88,10 @@ def createAb():
         new=Antibody(name=request.form['name'], weight=request.form['weight'], target=request.form['target'])
         session.add(new)
         session.commit()
+        image=request.files['picture']
+        if image and allowed_file(image.filename):
+            with store_context(fs_store):
+                new.picture.from_file(image)
         flash('Antibody Created')
         return redirect(url_for('antibodyMenu'))
     else:
@@ -95,6 +112,10 @@ def createAbLot(item_id):
 def editAb(item_id):
     editedItem = session.query(Antibody).filter_by(id=item_id).one()
     if request.method == 'POST':
+        image=request.files['picture']
+        if image and allowed_file(image.filename):
+            with store_context(fs_store):
+                editedItem.picture.from_file(image)
         editedItem.name=request.form['name']
         editedItem.weight=request.form['weight']
         editedItem.target=request.form['target']
@@ -141,22 +162,14 @@ def start_implicit_store_context():
 def stop_implicit_store_context(exception=None):
     pop_store_context()
 
-def attach_picture(table, item_id, location):
-    try:
-        item=session.query(table).filter_by(id=item_id).one()
-        with store_context(fs_store):
-            with open(location,'rb') as f:
-                item.picture.from_file(f)
-                session.commit()
-    except Exception:
-        session.rollback()
-        raise
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-def get_picture_url(table, item_id):
+def delete_picture(table, item_id):
     item=session.query(table).filter_by(id=item_id).one()
-    with store_context(fs_store):
-        picture_url = item.picture.locate()
-    return picture_url
+    fs_store.delete(item.picture.original)
+    session.commit()
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
