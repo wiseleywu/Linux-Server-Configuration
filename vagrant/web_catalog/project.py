@@ -50,18 +50,18 @@ def antibodyJSON():
     return jsonify(Antibodies=[i.serialize for i in antibodies])
 
 @app.route('/')
-@app.route('/home')
-def mainMenu():
-    return render_template('home.html')
+@app.route('/home/')
+def home():
+    return render_template('home.html', title="Home")
 
 @app.route('/antibody/')
-def antibodyMenu():
+def antibody():
     antibodies=session.query(Antibody).order_by(Antibody.name).all()
     lots=session.query(AntibodyLot).all()
     lotdict={}
     for x in range(1,session.query(Antibody).count()+1):
         lotdict[x]=session.query(AntibodyLot).filter(AntibodyLot.antibody_id==x).order_by(AntibodyLot.date).all()
-    return render_template('antibody.html', antibodies=antibodies, lotdict=lotdict, lots=lots)
+    return render_template('antibody.html', antibodies=antibodies, lotdict=lotdict, lots=lots, title="Antibody")
 
 @app.route('/<table>/img/<int:item_id>/')
 def get_picture_url(item_id, table):
@@ -75,12 +75,12 @@ def get_picture_url(item_id, table):
     return render_template('img.html',item=item, picture_url=picture_url)
 
 @app.route('/cytotoxin/')
-def cytotoxinMenu():
-    return render_template('cytotoxin.html')
+def cytotoxin():
+    return render_template('cytotoxin.html', title="Cytotoxin")
 
 @app.route('/ADC/')
-def adcMenu():
-    return render_template('adc.html')
+def adc():
+    return render_template('adc.html', title="ADC")
 
 @app.route('/create', methods=['GET','POST'])
 def createAb():
@@ -93,7 +93,7 @@ def createAb():
             with store_context(fs_store):
                 new.picture.from_file(image)
         flash('Antibody Created')
-        return redirect(url_for('antibodyMenu'))
+        return redirect(url_for('antibody'))
     else:
         return render_template('create-Ab.html')
 
@@ -104,7 +104,7 @@ def createAbLot(item_id):
         session.add(new)
         session.commit()
         flash('Antibody Lot Created')
-        return redirect(url_for('antibodyMenu'))
+        return redirect(url_for('antibody'))
     else:
         return render_template('create-ab-lot.html',item_id=item_id)
 
@@ -122,7 +122,7 @@ def editAb(item_id):
         session.add(editedItem)
         session.commit()
         flash('Antibody Edited')
-        return redirect(url_for('antibodyMenu'))
+        return redirect(url_for('antibody'))
     else:
         return render_template('edit-ab.html', item_id=item_id, editedItem=editedItem)
 
@@ -139,7 +139,7 @@ def editAbLot(item_id):
         session.add(editedItem)
         session.commit()
         flash('Antibody Lot Edited')
-        return redirect(url_for('antibodyMenu'))
+        return redirect(url_for('antibody'))
     else:
         return render_template('edit-ab-lot.html',item_id=item_id, editedItem=editedItem)
 
@@ -150,7 +150,7 @@ def delete(dbtype, item_id):
         session.delete(deleteItem)
         session.commit()
         flash('Item Deleted')
-        return redirect(url_for('antibodyMenu'))
+        return redirect(url_for('antibody'))
     else:
         pass
 

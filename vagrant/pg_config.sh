@@ -2,6 +2,9 @@ apt-get -qqy update
 apt-get -qqy install postgresql python-psycopg2
 apt-get -qqy install python-flask python-sqlalchemy
 apt-get -qqy install python-pip
+apt-get -qqy install imagemagick
+pip install werkzeug==0.8.3
+pip install Flask-Login==0.1.3
 pip install SQLAlchemy-ImageAttach
 pip install bleach
 pip install oauth2client
@@ -12,7 +15,7 @@ pip install passlib
 pip install itsdangerous
 pip install flask-httpauth
 pip install oauth2client
-sudo apt-get install imagemagick
+pip install flask-seasurf
 su postgres -c 'createuser -dRS vagrant'
 su vagrant -c 'createdb'
 su vagrant -c 'createdb forum'
