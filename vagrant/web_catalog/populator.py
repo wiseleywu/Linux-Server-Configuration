@@ -1,10 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Antibody, Cytotoxin, AntibodyImg, AntibodyLot, CytotoxinImg, CytotoxinLot, ADC, ADCLot
+from database_setup import Base, Antibody, Cytotoxin, AntibodyImg, AntibodyLot, CytotoxinImg, CytotoxinLot, Adc, AdcLot, AdcImg
 from sqlalchemy_imageattach.entity import Image, image_attachment
 from sqlalchemy_imageattach.context import store_context
 from random import randint
-from project import app, fs_store, session, get_picture_url, delete_picture
+from project import app, fs_store, session, get_picture_url, delete_picture, attach_picture, attach_picture_url
 import datetime
 import random
 
@@ -75,11 +75,11 @@ def cytotoxinlot():
     return total
 
 def createADC():
-	adc1=ADC(name='Amatuximab maytansine', chemistry='lysine conjugation')
-	adc2=ADC(name='Brentuximab vedotin', chemistry='cysteine conjugation')
-	adc3=ADC(name='Gemtuzumab ozogamicin', chemistry='site-specific conjugation')
-	adc4=ADC(name='Trastuzumab emtansine', chemistry='engineered cysteine conjugation')
-	adc5=ADC(name='Vorsetuzumab pyrrolobenzodiazepine', chemistry='enzyme-assisted conjugation')
+	adc1=Adc(name='Amatuximab maytansine', chemistry='lysine conjugation')
+	adc2=Adc(name='Brentuximab vedotin', chemistry='cysteine conjugation')
+	adc3=Adc(name='Gemtuzumab ozogamicin', chemistry='site-specific conjugation')
+	adc4=Adc(name='Trastuzumab emtansine', chemistry='engineered cysteine conjugation')
+	adc5=Adc(name='Vorsetuzumab pyrrolobenzodiazepine', chemistry='enzyme-assisted conjugation')
 	session.add_all([adc1, adc2, adc3, adc4, adc5])
 	session.commit()
 
@@ -96,7 +96,7 @@ def createADCLot():
 				lot.remove(randomlot)
 			else:
 				error=False
-		adclot=ADCLot(date=createRandomDate(),
+		adclot=AdcLot(date=createRandomDate(),
 					  aggregate=randint(0,5)+round(random.random(),2),
 					  endotoxin=randint(0,10)+round(random.random(),2),
 					  concentration=randint(0,10)+round(random.random(),2),
@@ -104,7 +104,7 @@ def createADCLot():
 					  vialNumber=randint(1,100),
 					  adc_id=randomlot,
 					  antibodylot_id=id1,
-					  cytotoxin_lot_id=id2)
+					  cytotoxinlot_id=id2)
 		session.add(adclot)
 		session.commit()
 
@@ -126,6 +126,8 @@ if __name__ == '__main__':
 	createCytotoxinLot()
 	createADC()
 	createADCLot()
-	for x in ranage(1,6):
-		attach_picture(Antibody, x, 'static/images/antibody.png')
+	for x in range(1,6):
+		attach_picture_url(Antibody, x, 'http://www.prosci-inc.com/media/wysiwyg/antibody.png')
+		attach_picture_url(Cytotoxin, x, 'http://www.prosci-inc.com/media/wysiwyg/antibody.png')
+		attach_picture_url(Adc, x, 'http://www.prosci-inc.com/media/wysiwyg/antibody.png')
 	print 'Database Populated'

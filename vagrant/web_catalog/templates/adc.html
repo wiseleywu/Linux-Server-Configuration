@@ -1,97 +1,158 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>Antibody-Drug Conjugate</title>
-    <!-- Bootstrap -->
-    <link href={{ url_for('static', filename='css/bootstrap.min.css')}} rel="stylesheet">
-    <link href={{ url_for('static', filename='css/style.css')}} rel="stylesheet">
-  </head>
-  <body>
-    <nav class="navbar navbar-default navbar-fixed-top">
-      <div class="container">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="home">Biologics Catalog</a>
-        </div>
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-          <ul class="nav navbar-nav">
-            <li><a href="home">Home</a></li>
-            <li><a href="antibody">Antibody</a></li>
-            <li><a href="cytotoxin">Cytotoxin</a></li>
-            <li class="active"><a href="ADC">Antibody-Drug Conjugate<span class="sr-only">(current)</span></a></li>
-          </ul>
-          <form class="navbar-form navbar-right" role="search">
-            <div class="form-group">
-              <input type="text" class="form-control" placeholder="Search">
-            </div>
-            <button type="submit" class="btn btn-default">Submit</button>
-          </form>
-        </div><!-- /.navbar-collapse -->
-      </div>
-    </nav>
-    <div class="container">
-      <div class="jumbotron">
-        <h1>Antibody-Drug Conjugate</h1>
-        <p>Antibody-drug conjugates or ADCs are a new class of highly potent biopharmaceutical drugs designed as a targeted therapy for the treatment of people with cancer. ADCs are complex molecules composed of an antibody (a whole mAb or an antibody fragment such as a single-chain variable fragment [scFv]) linked, via a stable, chemical, linker with labile bonds, to a biological active cytotoxic (anticancer) payload or drug. Antibody Drug Conjugates are examples of bioconjugates and immunoconjugates.</p>
-        <p>By combining the unique targeting capabilities of monoclonal antibodies with the cancer-killing ability of cytotoxic drugs, antibody-drug conjugates allow sensitive discrimination between healthy and diseased tissue. This means that, in contrast to traditional chemotherapeutic agents, antibody-drug conjugates target and attack the cancer cell so that healthy cells are less severely affected.</p>
-        <ul class="catalog-list">
-          <h3><li><a href="#list1">list 1</a></li></h3>
-          <h3><li><a href="#list2">list 2</a></li></h3>
-          <h3><li>list 3</li></h3>
-        </ul>
-      </div>
-    </div>
-    <div class="container">
-      <div class="jumbotron">
-        <h1><a name="list1">list 1</a></h1>
-        <p>
-          Cell surface heparan sulfate proteoglycans are composed of a membrane-associated protein core substituted with a variable number of heparan sulfate chains. Members of the glypican-related integral membrane proteoglycan family (GRIPS) contain a core protein anchored to the cytoplasmic membrane via a glycosyl phosphatidylinositol linkage. These proteins may play a role in the control of cell division and growth regulation
-        </p>
-      </div>
-    </div>
-    <div class="container">
-      <div class="jumbotron">
-        <h1><a name="list2">list 2</a></h1>
-        <p>
-          Cell surface heparan sulfate proteoglycans are composed of a membrane-associated protein core substituted with a variable number of heparan sulfate chains. Members of the glypican-related integral membrane proteoglycan family (GRIPS) contain a core protein anchored to the cytoplasmic membrane via a glycosyl phosphatidylinositol linkage. These proteins may play a role in the control of cell division and growth regulation
-        </p>
-        <button type="button" data-toggle="modal" href="edit" data-target="#modal">Edit</button>
-        <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">Launch demo modal</button>
-        <a href="delete.html">Delete</a>
-      </div>
-    </div>
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src={{ url_for('static', filename='js/bootstrap.min.js') }}></script>
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+{% extends "base.html" %}
+{% block title %}{{title}}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="jumbotron">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-success alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{ message }}
           </div>
-          <div class="modal-body">
-            <p id="result"></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
-          </div>
-        </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <h1>Antibody-Drug Conjugate</h1>
+    <p>Antibody-drug conjugates or ADCs are a new class of highly potent biopharmaceutical drugs designed as a targeted therapy for the treatment of people with cancer. ADCs are complex molecules composed of an antibody (a whole mAb or an antibody fragment such as a single-chain variable fragment [scFv]) linked, via a stable, chemical, linker with labile bonds, to a biological active cytotoxic (anticancer) payload or drug. Antibody Drug Conjugates are examples of bioconjugates and immunoconjugates.</p>
+    <p>By combining the unique targeting capabilities of monoclonal antibodies with the cancer-killing ability of cytotoxic drugs, antibody-drug conjugates allow sensitive discrimination between healthy and diseased tissue. This means that, in contrast to traditional chemotherapeutic agents, antibody-drug conjugates target and attack the cancer cell so that healthy cells are less severely affected.</p>
+    {% for adc in adcs %}
+    <ul>
+      <h3><li><a href="#{{adc.name}}">{{adc.name}}</a></li></h3>
+      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#imgADC{{ adc.id }}" href="{{ url_for('get_picture_url',item_id=adc.id, dbtype='adc') }}">Molecular Structure</button>
+      <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editADC{{ adc.id }}" href="{{url_for('editType', dbtype='adc', item_id=adc.id)}}">Edit</button>
+      <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteADC{{ adc.id }}">Delete</button>
+    </ul>
+    {% endfor %}
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-adc" href="{{url_for('createType',dbtype='adc')}}">Add New ADC</button>
+  </div>
+</div>
+{% for adc in adcs %}
+<div class="container">
+  <div class="jumbotron">
+    <h3><a style="padding-top: 50px; margin-top: -50px;" name="{{adc.name}}">{{adc.name}}</a></h3>
+    <div class="container table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Manufactured Date</th>
+            <th>Lot Number</th>
+            <th>Antibody Lot</th>
+            <th>Cytotoxin Lot</th>
+            <th>Aggregate (%)</th>
+            <th>Endotoxin (EU/mg)</th>
+            <th>Concentration (mg/mL)</th>
+            <th>Vial Volume (mL)</th>
+            <th>Available Vials</th>
+            <th>Edit</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lot in lotdict[adc.id] %}
+          <tr>
+            <td>{{lot.date}}</td>
+            <td>{{lot.id}}</td>
+            <td>{{lot.antibodylot_id}}</td>
+            <td>{{lot.cytotoxinlot_id}}</td>
+            <td>{{lot.aggregate}}</td>
+            <td>{{lot.endotoxin}}</td>
+            <td>{{lot.concentration}}</td>
+            <td>{{lot.vialVolume}}</td>
+            <td>{{lot.vialNumber}}</td>
+            <td><button type="button" class="btn btn-warning" data-toggle="modal" data-target="#edit{{ lot.id }}" href="{{url_for('editTypeLot', dbtype='adc', item_id=lot.id)}}">Edit</button></td>
+            <td><button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteLot{{ lot.id }}">Delete</button></td>
+          </tr>
+          {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-lot{{adc.id}}" href="{{url_for('createTypeLot', dbtype='adc', item_id=adc.id)}}">Create New Lot</button></td>
+    </div>
+  </div>
+</div>
+{% endfor %}
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<!-- Modal to create new ADC type -->
+<div class="modal fade" id="create-adc" tabindex="-1" role="dialog" aria-labelledby="createLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+{% for adc in adcs %}
+<!-- Modal to open ADC images -->
+<div class="modal fade" id="imgADC{{ adc.id }}" tabindex="-1" role="dialog" aria-labelledby="showImg">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+<!-- Modal to edit ADC type -->
+<div class="modal fade" id="editADC{{ adc.id }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+<!-- Modal to delete ADC type -->
+<div class="modal fade" id="deleteADC{{ adc.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="deleteLabel">Delete ADC</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong>{{adc.name}}</strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <form action="{{url_for('delete', dbtype='adc', item_id=adc.id)}}" method="post">
+          <button name="delete" value="Delete" type="submit" class="btn btn-danger">Confirm</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+        </form>
       </div>
     </div>
-    <script>$("#result").load("templates/edit.html #testing")</script>
-  </body>
-</html>
+  </div>
+</div>
+<!-- Modal to create new ADC Lot -->
+<div class="modal fade" id="create-lot{{adc.id}}" tabindex="-1" role="dialog" aria-labelledby="createLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% for lot in lots %}
+<!-- Modal to edit ADC lot -->
+<div class="modal fade" id="edit{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+<!-- Modal to delete ADC Lot -->
+<div class="modal fade" id="deleteLot{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="deleteLabel">Delete Items</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong>lot number {{lot.id}}</strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <form action="{{url_for('delete', dbtype='adcLot', item_id=lot.id)}}" method="post">
+          <button name="delete" value="Delete" type="submit" class="btn btn-danger">Confirm</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
