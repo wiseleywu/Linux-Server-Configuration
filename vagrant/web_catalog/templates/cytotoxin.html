@@ -3,49 +3,149 @@
 {% block content %}
 <div class="container">
   <div class="jumbotron">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-success alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
     <h1>Cytotoxin</h1>
-    <p>This is the Cytotoxin Page</p>
-    <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">
-      Launch demo modal
-    </button>
+    <p>Yup, it is as dangerous as it sounds</p>
+    {% for cytotoxin in cytotoxins %}
+    <ul>
+      <h3><li><a href="#{{cytotoxin.name}}">{{cytotoxin.name}}</a></li></h3>
+      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#imgToxin{{ cytotoxin.id }}" href="{{ url_for('get_picture_url',item_id=cytotoxin.id, dbtype='cytotoxin') }}">Molecular Structure</button>
+      <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editToxin{{ cytotoxin.id }}" href="{{url_for('editType', dbtype='cytotoxin', item_id=cytotoxin.id)}}">Edit</button>
+      <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteToxin{{ cytotoxin.id }}">Delete</button>
+    </ul>
+    {% endfor %}
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-cytotixn" href="{{url_for('createType',dbtype='cytotoxin')}}">Add New Cytotoxin</button>
   </div>
+</div>
+{% for cytotoxin in cytotoxins %}
+<div class="container">
   <div class="jumbotron">
-    <h1>Cytotoxin</h1>
-    <p>This is the Cytotoxin Page</p>
-    <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">
-      Launch demo modal
-    </button>
+    <h3><a style="padding-top: 50px; margin-top: -50px;" name="{{cytotoxin.name}}">{{cytotoxin.name}}</a></h3>
+    <div class="container table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Manufactured Date</th>
+            <th>Lot Number</th>
+            <th>Purity (%)</th>
+            <th>Concentration (mg/mL)</th>
+            <th>Vial Volume (mL)</th>
+            <th>Available Vials</th>
+            <th>Edit</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lot in lotdict[cytotoxin.id] %}
+          <tr>
+            <td>{{lot.date}}</td>
+            <td>{{lot.id}}</td>
+            <td>{{lot.purity}}</td>
+            <td>{{lot.concentration}}</td>
+            <td>{{lot.vialVolume}}</td>
+            <td>{{lot.vialNumber}}</td>
+            <td><button type="button" class="btn btn-warning" data-toggle="modal" data-target="#edit{{ lot.id }}" href="{{url_for('editTypeLot', dbtype='cytotoxin', item_id=lot.id)}}">Edit</button></td>
+            <td><button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteLot{{ lot.id }}">Delete</button></td>
+          </tr>
+          {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-lot{{cytotoxin.id}}" href="{{url_for('createTypeLot', dbtype='cytotoxin', item_id=cytotoxin.id)}}">Create New Lot</button></td>
+    </div>
   </div>
-  <div class="jumbotron">
-    <h1>Cytotoxin</h1>
-    <p>This is the Cytotoxin Page</p>
-    <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">
-      Launch demo modal
-    </button>
+</div>
+{% endfor %}
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<!-- Modal to create new cytotoxin type -->
+<div class="modal fade" id="create-cytotixn" tabindex="-1" role="dialog" aria-labelledby="createLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
   </div>
-  <!-- Modal -->
-  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="myModalLabel">Modal title</h4>
-        </div>
-        <div class="modal-body">
-          ...
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Save changes</button>
-        </div>
+</div>
+{% for cytotoxin in cytotoxins %}
+<!-- Modal to open Cytotoxin images -->
+<div class="modal fade" id="imgToxin{{ cytotoxin.id }}" tabindex="-1" role="dialog" aria-labelledby="showImg">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+<!-- Modal to edit Cytotoxin type -->
+<div class="modal fade" id="editToxin{{ cytotoxin.id }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+<!-- Modal to delete Cytotoxin type -->
+<div class="modal fade" id="deleteToxin{{ cytotoxin.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="deleteLabel">Delete Cytotoxin</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong>{{cytotoxin.name}}</strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <form action="{{url_for('delete', dbtype='cytotoxin', item_id=cytotoxin.id)}}" method="post">
+          <button name="delete" value="Delete" type="submit" class="btn btn-danger">Confirm</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+        </form>
       </div>
     </div>
   </div>
 </div>
-{% endblock %}
-{% block footer %}
-{{super()}}
+<!-- Modal to create new Antibody Lot -->
+<div class="modal fade" id="create-lot{{cytotoxin.id}}" tabindex="-1" role="dialog" aria-labelledby="createLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% for lot in lots %}
+<!-- Modal to edit antibody lot -->
+<div class="modal fade" id="edit{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+<!-- Modal to delete Cytotoxin Lot -->
+<div class="modal fade" id="deleteLot{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="deleteLabel">Delete Items</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong>lot number {{lot.id}}</strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <form action="{{url_for('delete', dbtype='cytotoxinLot', item_id=lot.id)}}" method="post">
+          <button name="delete" value="Delete" type="submit" class="btn btn-danger">Confirm</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
 {% endblock %}

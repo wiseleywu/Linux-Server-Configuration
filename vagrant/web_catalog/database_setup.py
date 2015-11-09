@@ -77,13 +77,14 @@ class CytotoxinLot(Base):
     cytotoxin_id=Column(Integer, ForeignKey('cytotoxin.id'))
     cytotoxin=relationship('Cytotoxin')
 
-class ADC(Base):
+class Adc(Base):
     __tablename__='adc'
     name=Column(String(80), nullable=False)
     chemistry=Column(String(80), nullable=False)
     id=Column(Integer, primary_key=True)
+    picture=image_attachment('AdcImg')
 
-class ADCLot(Base):
+class AdcLot(Base):
     __tablename__='adc_lot'
     id=Column(Integer, primary_key=True)
     date=Column(Date, nullable=False)
@@ -93,11 +94,16 @@ class ADCLot(Base):
     vialVolume=Column(Float, nullable=False)
     vialNumber=Column(Integer, nullable=False)
     adc_id=Column(Integer, ForeignKey('adc.id'))
-    adc=relationship('ADC')
+    adc=relationship('Adc')
     antibodylot_id=Column(Integer, ForeignKey('antibody_lot.id'))
     antibodylot=relationship(AntibodyLot)
-    cytotoxin_lot_id=Column(Integer, ForeignKey('cytotoxin_lot.id'))
-    cytotoxin_lot=relationship(CytotoxinLot)
+    cytotoxinlot_id=Column(Integer, ForeignKey('cytotoxin_lot.id'))
+    cytotoxinlot=relationship(CytotoxinLot)
+
+class AdcImg(Base, Image):
+    __tablename__='adc_img'
+    adc_id=Column(Integer, ForeignKey('adc.id'), primary_key=True)
+    adc=relationship('Adc')
 
 ############################insert at end of file #############################
 engine = create_engine('sqlite:///biologicscatalog.db')

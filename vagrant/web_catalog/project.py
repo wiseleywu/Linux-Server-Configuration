@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from werkzeug import secure_filename
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, MetaData, Table, desc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_imageattach.stores.fs import FileSystemStore
 from sqlalchemy_imageattach.context import store_context, push_store_context, pop_store_context
-from database_setup import Base, Antibody, Cytotoxin, AntibodyImg, AntibodyLot, CytotoxinImg, CytotoxinLot, ADC, ADCLot
+from database_setup import Base, Antibody, Cytotoxin, AntibodyImg, AntibodyLot, CytotoxinImg, CytotoxinLot, Adc, AdcLot, AdcImg
+from urllib2 import urlopen
 import datetime
 import os
 from werkzeug import secure_filename
@@ -23,6 +24,7 @@ fs_store = FileSystemStore(
 
 engine = create_engine('sqlite:///biologicscatalog.db')
 Base.metadata.bind = engine
+meta = MetaData(bind=engine)
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
@@ -50,9 +52,9 @@ def antibodyJSON():
     return jsonify(Antibodies=[i.serialize for i in antibodies])
 
 @app.route('/')
-@app.route('/home/')
+@app.route('/home')
 def home():
-    return render_template('home.html', title="Home")
+    return render_template('home.html', title='Home')
 
 @app.route('/antibody/')
 def antibody():
@@ -61,96 +63,131 @@ def antibody():
     lotdict={}
     for x in range(1,session.query(Antibody).count()+1):
         lotdict[x]=session.query(AntibodyLot).filter(AntibodyLot.antibody_id==x).order_by(AntibodyLot.date).all()
-    return render_template('antibody.html', antibodies=antibodies, lotdict=lotdict, lots=lots, title="Antibody")
+    return render_template('antibody.html', title='Antibody', antibodies=antibodies, lotdict=lotdict, lots=lots)
 
-@app.route('/<table>/img/<int:item_id>/')
-def get_picture_url(item_id, table):
-    item=session.query(eval(table.capitalize())).filter_by(id=item_id).one()
+@app.route('/<dbtype>/img/<int:item_id>/')
+def get_picture_url(dbtype, item_id):
+    item=session.query(eval(dbtype.capitalize())).filter_by(id=item_id).one()
     with store_context(fs_store):
         try:
             picture_url = item.picture.locate()
         except IOError:
             print "No picture found for lot# %s" % str(item_id)
             picture_url=''
-    return render_template('img.html',item=item, picture_url=picture_url)
+    return render_template('img.html',item=item, picture_url=picture_url, dbtype=dbtype)
 
 @app.route('/cytotoxin/')
 def cytotoxin():
-    return render_template('cytotoxin.html', title="Cytotoxin")
+    cytotoxins=session.query(Cytotoxin).order_by(Cytotoxin.name).all()
+    lots=session.query(CytotoxinLot).all()
+    lotdict={}
+    for x in range(1,session.query(Cytotoxin).count()+1):
+        lotdict[x]=session.query(CytotoxinLot).filter(CytotoxinLot.cytotoxin_id==x).order_by(CytotoxinLot.date).all()
+    return render_template('cytotoxin.html', title='Cytotoxin', cytotoxins=cytotoxins, lotdict=lotdict, lots=lots)
 
-@app.route('/ADC/')
+@app.route('/adc/')
 def adc():
-    return render_template('adc.html', title="ADC")
+    adcs=session.query(Adc).order_by(Adc.name).all()
+    lots=session.query(AdcLot).all()
+    lotdict={}
+    for x in range(1,session.query(Adc).count()+1):
+        lotdict[x]=session.query(AdcLot).filter(AdcLot.adc_id==x).order_by(AdcLot.date).all()
+    return render_template('adc.html', title='ADC', adcs=adcs, lotdict=lotdict, lots=lots)
 
-@app.route('/create', methods=['GET','POST'])
-def createAb():
+@app.route('/<dbtype>/create', methods=['GET','POST'])
+def createType(dbtype):
+    table=Table(dbtype, meta, autoload=True, autoload_with=engine)
     if request.method == 'POST':
-        new=Antibody(name=request.form['name'], weight=request.form['weight'], target=request.form['target'])
+        if dbtype == 'antibody':
+            new=eval(dbtype.capitalize())(name=request.form['name'], weight=request.form['weight'], target=request.form['target'])
+        elif dbtype == 'cytotoxin':
+            new=eval(dbtype.capitalize())(name=request.form['name'], weight=request.form['weight'], drugClass=request.form['drugClass'])
+        else:
+            new=eval(dbtype.capitalize())(name=request.form['name'], chemistry=request.form['chemistry'])
         session.add(new)
         session.commit()
         image=request.files['picture']
         if image and allowed_file(image.filename):
             with store_context(fs_store):
                 new.picture.from_file(image)
-        flash('Antibody Created')
-        return redirect(url_for('antibody'))
+        flash('%s Created' % dbtype.capitalize())
+        return redirect(url_for(dbtype))
     else:
-        return render_template('create-Ab.html')
+        return render_template('create-type.html', columns=table.columns, dbtype=dbtype)
 
-@app.route('/create/<int:item_id>/', methods=['GET','POST'])
-def createAbLot(item_id):
+@app.route('/<dbtype>/<int:item_id>/create/', methods=['GET','POST'])
+def createTypeLot(dbtype, item_id):
+    table=Table('%s_lot' %dbtype, meta, autoload=True, autoload_with=engine)
+    maxablot=session.query(AntibodyLot).order_by(desc(AntibodyLot.id)).first().id
+    maxtoxinlot=session.query(CytotoxinLot).order_by(desc(CytotoxinLot.id)).first().id
     if request.method == 'POST':
-        new=AntibodyLot(date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d'), aggregate=request.form['aggregate'], endotoxin=request.form['endotoxin'], concentration=request.form['concentration'], vialVolume=request.form['vialVolume'], vialNumber=request.form['vialNumber'], antibody_id=item_id)
+        if dbtype == 'antibody':
+            new=AntibodyLot(date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d'), aggregate=request.form['aggregate'], endotoxin=request.form['endotoxin'], concentration=request.form['concentration'], vialVolume=request.form['vialVolume'], vialNumber=request.form['vialNumber'], antibody_id=item_id)
+        elif dbtype == 'cytotoxin':
+            new=CytotoxinLot(date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d'), purity=request.form['purity'], concentration=request.form['concentration'], vialVolume=request.form['vialVolume'], vialNumber=request.form['vialNumber'], cytotoxin_id=item_id)
+        else:
+            new=AdcLot(date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d'), aggregate=request.form['aggregate'], endotoxin=request.form['endotoxin'], concentration=request.form['concentration'], vialVolume=request.form['vialVolume'], vialNumber=request.form['vialNumber'], antibodylot_id=request.form['antibodylot_id'], cytotoxinlot_id=request.form['cytotoxinlot_id'], adc_id=item_id)
         session.add(new)
         session.commit()
-        flash('Antibody Lot Created')
-        return redirect(url_for('antibody'))
+        flash('%s Lot Created' %dbtype.capitalize())
+        return redirect(url_for(dbtype))
     else:
-        return render_template('create-ab-lot.html',item_id=item_id)
+        return render_template('create-type-lot.html', dbtype=dbtype, columns=table.columns, item_id=item_id, maxablot=maxablot, maxtoxinlot=maxtoxinlot)
 
-@app.route('/editAb/<int:item_id>/', methods=['GET','POST'])
-def editAb(item_id):
-    editedItem = session.query(Antibody).filter_by(id=item_id).one()
+@app.route('/<dbtype>/<int:item_id>/edit', methods=['GET','POST'])
+def editType(dbtype, item_id):
+    table=Table(dbtype, meta, autoload=True, autoload_with=engine)
+    editedItem = session.query(eval(dbtype.capitalize())).filter_by(id=item_id).one()
     if request.method == 'POST':
         image=request.files['picture']
         if image and allowed_file(image.filename):
             with store_context(fs_store):
                 editedItem.picture.from_file(image)
-        editedItem.name=request.form['name']
-        editedItem.weight=request.form['weight']
-        editedItem.target=request.form['target']
+        for column in table.columns:
+            if column.name == 'id':
+                pass
+            else:
+                setattr(editedItem, column.name, request.form[column.name])
         session.add(editedItem)
         session.commit()
-        flash('Antibody Edited')
-        return redirect(url_for('antibody'))
+        flash('%s Edited' % dbtype.capitalize())
+        return redirect(url_for(dbtype))
     else:
-        return render_template('edit-ab.html', item_id=item_id, editedItem=editedItem)
+        return render_template('edit-type.html', dbtype=dbtype, columns=table.columns, item_id=item_id, editedItem=editedItem)
 
-@app.route('/editAbLot/<int:item_id>/', methods=['GET','POST'])
-def editAbLot(item_id):
-    editedItem = session.query(AntibodyLot).filter_by(id=item_id).one()
+@app.route('/<dbtype>/lot/<int:item_id>/edit', methods=['GET','POST'])
+def editTypeLot(dbtype, item_id):
+    table=Table('%s_lot' % dbtype, meta, autoload=True, autoload_with=engine)
+    maxablot=session.query(AntibodyLot).order_by(desc(AntibodyLot.id)).first().id
+    maxtoxinlot=session.query(CytotoxinLot).order_by(desc(CytotoxinLot.id)).first().id
+    editedItem = session.query(eval(dbtype.capitalize()+'Lot')).filter_by(id=item_id).one()
     if request.method == 'POST':
         editedItem.date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d')
-        editedItem.aggregate=request.form['aggregate']
-        editedItem.endotoxin=request.form['endotoxin']
-        editedItem.concentration=request.form['concentration']
-        editedItem.vialVolume=request.form['vialVolume']
-        editedItem.vialNumber=request.form['vialNumber']
+        for column in table.columns:
+            print column.name
+            if column.name in ('id', 'date', 'antibody_id', 'cytotoxin_id', 'adc_id'):
+                pass
+            else:
+                setattr(editedItem, column.name, request.form[column.name])
         session.add(editedItem)
         session.commit()
-        flash('Antibody Lot Edited')
-        return redirect(url_for('antibody'))
+        flash('%s Lot Edited'% dbtype.capitalize())
+        return redirect(url_for(dbtype))
     else:
-        return render_template('edit-ab-lot.html',item_id=item_id, editedItem=editedItem)
+        return render_template('edit-type-lot.html', dbtype=dbtype, columns=table.columns, item_id=item_id, editedItem=editedItem, maxablot=maxablot, maxtoxinlot=maxtoxinlot)
 
-@app.route('/delete/<dbtype>/<int:item_id>/', methods=['GET','POST'])
+@app.route('/<dbtype>/<int:item_id>/delete/', methods=['GET','POST'])
 def delete(dbtype, item_id):
-    deleteItem=session.query(eval(dbtype)).filter_by(id=item_id).one()
+    deleteItem=session.query(eval(dbtype[0].upper()+dbtype[1:])).filter_by(id=item_id).one()
     if request.method == 'POST':
         session.delete(deleteItem)
         session.commit()
-        flash('Item Deleted')
-        return redirect(url_for('antibody'))
+        if dbtype[-3:].lower() == 'lot':
+            flash('%s Lot Deleted' % dbtype[:-3].capitalize())
+            return redirect(url_for(dbtype[:-3]))
+        else:
+            flash('%s  Deleted' % dbtype.capitalize())
+            return redirect(url_for(dbtype))
     else:
         pass
 
@@ -165,6 +202,27 @@ def stop_implicit_store_context(exception=None):
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+def attach_picture(table, item_id, location):
+    try:
+        item=session.query(table).filter_by(id=item_id).one()
+        with store_context(fs_store):
+            with open(location,'rb') as f:
+                item.picture.from_file(f)
+                session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+def attach_picture_url(table, item_id, location):
+    try:
+        item=session.query(table).filter_by(id=item_id).one()
+        with store_context(fs_store):
+            item.picture.from_file(urlopen(location))
+            session.commit()
+    except Exception:
+        session.rollback()
+        raise
 
 def delete_picture(table, item_id):
     item=session.query(table).filter_by(id=item_id).one()

@@ -20,12 +20,12 @@
     {% for antibody in antibodies %}
     <ul>
       <h3><li><a href="#{{antibody.name}}">{{antibody.name}}</a></li></h3>
-      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#imgAb{{ antibody.id }}">Molecular Structure</button>
-      <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editAb{{ antibody.name }}">Edit</button>
+      <button type="button" class="btn btn-info" data-toggle="modal" data-target="#imgAb{{ antibody.id }}" href="{{ url_for('get_picture_url',item_id=antibody.id, dbtype='antibody') }}">Molecular Structure</button>
+      <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editAb{{ antibody.name }}" href="{{url_for('editType', dbtype='antibody', item_id=antibody.id)}}">Edit</button>
       <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteAb{{ antibody.id }}">Delete</button>
     </ul>
     {% endfor %}
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-ab">Add New Antibody</button>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-ab" href="{{url_for('createType',dbtype='antibody')}}">Add New Antibody</button>
   </div>
 </div>
 {% for antibody in antibodies %}
@@ -57,120 +57,57 @@
             <td>{{lot.concentration}}</td>
             <td>{{lot.vialVolume}}</td>
             <td>{{lot.vialNumber}}</td>
-            <td><button type="button" class="btn btn-warning" data-toggle="modal" data-target="#edit{{ lot.id }}">Edit</button></td>
+            <td><button type="button" class="btn btn-warning" data-toggle="modal" data-target="#edit{{ lot.id }}" href="{{url_for('editTypeLot', dbtype='antibody', item_id=lot.id)}}">Edit</button></td>
             <td><button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteAbLot{{ lot.id }}">Delete</button></td>
           </tr>
           {% endfor %}
           </tr>
         </tbody>
       </table>
-    <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-lot{{antibody.id}}">Create New Lot</button></td>
+    <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-lot{{antibody.id}}" href="{{url_for('createTypeLot', dbtype='antibody', item_id=antibody.id)}}">Create New Lot</button></td>
     </div>
   </div>
 </div>
 {% endfor %}
-{% block footer %}
-{{super()}}
-{% endblock %}
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<!-- Modal to create new antibody type (redirect to create.html) -->
 <div class="modal fade" id="create-ab" tabindex="-1" role="dialog" aria-labelledby="createLabel">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="createLabel">Add New Antibody</h4>
-      </div>
-      <div class="modal-body">
-        {% include "create-ab.html" %}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
     </div>
   </div>
 </div>
-<!-- Modal for creating new antibody lot (redirect to create-ab-lot.html) -->
 {% for antibody in antibodies %}
-<div class="modal fade" id="create-lot{{antibody.id}}" tabindex="-1" role="dialog" aria-labelledby="createLabel">
+<!-- Modal to open Antibody images -->
+<div class="modal fade" id="imgAb{{ antibody.id }}" tabindex="-1" role="dialog" aria-labelledby="showImg">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="createLabel">Add New Lot</h4>
-      </div>
-      <div class="modal-body">
-        <p id="create{{antibody.id}}"></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
     </div>
   </div>
 </div>
-{% endfor %}
-<!-- Open Antibody Images -->
-    {% for antibody in antibodies %}
-    <div class="modal fade" id="imgAb{{ antibody.id }}" tabindex="-1" role="dialog" aria-labelledby="showImg">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-body">
-            <p id="showAb{{ antibody.id }}"></p>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-<!-- Edit Antibody Type (and Modal) -->
-{% for antibody in antibodies %}
+<!-- Modal to edit Antibody type -->
 <div class="modal fade" id="editAb{{ antibody.name }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="editLabel">Edit Samples</h4>
-      </div>
-      <div class="modal-body">
-        <p id="editAb{{ antibody.id }}"></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
     </div>
   </div>
 </div>
-{% endfor %}
-<!-- Modal for editing antibody lot (redirect to edit-ab-lot.html) -->
-{% for lot in lots %}
-<div class="modal fade" id="edit{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
-<div class="modal-dialog" role="document">
-<div class="modal-content">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-    <h4 class="modal-title" id="editLabel">Edit Items</h4>
-  </div>
-  <div class="modal-body">
-    <p id="editAbLot{{ lot.id }}"></p>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-  </div>
-</div>
-</div>
-</div>
-{% endfor %}
-<!-- Delete Antibody Type -->
-{% for antibody in antibodies %}
+<!-- Modal to delete Antibody type -->
 <div class="modal fade" id="deleteAb{{ antibody.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteLabel">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="deleteLabel">Delete Items</h4>
+        <h4 class="modal-title" id="deleteLabel">Delete Antibody</h4>
       </div>
       <div class="modal-body">
         <p>Are you sure you want to delete <strong>{{antibody.name}}</strong>?</p>
       </div>
       <div class="modal-footer">
-        <form action="{{url_for('delete', dbtype='Antibody', item_id=antibody.id)}}" method="post">
+        <form action="{{url_for('delete', dbtype='antibody', item_id=antibody.id)}}" method="post">
           <button name="delete" value="Delete" type="submit" class="btn btn-danger">Confirm</button>
           <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
         </form>
@@ -178,9 +115,23 @@
     </div>
   </div>
 </div>
+<!-- Modal to create new Antibody Lot -->
+<div class="modal fade" id="create-lot{{antibody.id}}" tabindex="-1" role="dialog" aria-labelledby="createLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
 {% endfor %}
-<!-- Delete Antibody Lot -->
 {% for lot in lots %}
+<!-- Modal to edit antibody lot -->
+<div class="modal fade" id="edit{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="editLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    </div>
+  </div>
+</div>
+<!-- Modal to delete Antibody Lot -->
 <div class="modal fade" id="deleteAbLot{{ lot.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteLabel">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -192,7 +143,7 @@
         <p>Are you sure you want to delete <strong>lot number {{lot.id}}</strong>?</p>
       </div>
       <div class="modal-footer">
-        <form action="{{url_for('delete', dbtype='AntibodyLot', item_id=lot.id)}}" method="post">
+        <form action="{{url_for('delete', dbtype='antibodyLot', item_id=lot.id)}}" method="post">
           <button name="delete" value="Delete" type="submit" class="btn btn-danger">Confirm</button>
           <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
         </form>
@@ -200,14 +151,5 @@
     </div>
   </div>
 </div>
-{% endfor %}
-<!-- Scripts to open external pages within Modal -->
-{% for antibody in antibodies %}
-<script>$("#create{{ antibody.id }}").load("{{url_for('createAbLot', item_id=antibody.id)}}")</script>
-<script>$("#editAb{{ antibody.id }}").load("{{url_for('editAb', item_id=antibody.id)}}")</script>
-<script>$("#showAb{{ antibody.id }}").load("{{ url_for('get_picture_url',item_id=antibody.id, table='antibody') }}")</script>
-{% endfor %}
-{% for lot in lots %}
-<script>$("#editAbLot{{ lot.id }}").load("{{url_for('editAbLot', item_id=lot.id)}}")</script>
 {% endfor %}
 {% endblock %}
