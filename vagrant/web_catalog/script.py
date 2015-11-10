@@ -18,3 +18,6 @@ from project import app, fs_store, session, get_picture_url, delete_picture, met
 maxablot=session.query(AntibodyLot).order_by(desc(AntibodyLot.id)).first().id
 maxtoxinlot=session.query(CytotoxinLot).order_by(desc(CytotoxinLot.id)).first().id
 print maxablot, maxtoxinlot
+
+test=session.query(AntibodyLot).filter_by(id=20).one()
+print test.user_id

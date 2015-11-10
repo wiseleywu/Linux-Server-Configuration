@@ -21,11 +21,17 @@
     <ul>
       <h3><li><a href="#{{antibody.name}}">{{antibody.name}}</a></li></h3>
       <button type="button" class="btn btn-info" data-toggle="modal" data-target="#imgAb{{ antibody.id }}" href="{{ url_for('get_picture_url',item_id=antibody.id, dbtype='antibody') }}">Molecular Structure</button>
+      {% if userID==antibody.user_id %}
       <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editAb{{ antibody.name }}" href="{{url_for('editType', dbtype='antibody', item_id=antibody.id)}}">Edit</button>
       <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteAb{{ antibody.id }}">Delete</button>
+      {% else %}
+      {% endif %}
     </ul>
     {% endfor %}
+    {% if username %}
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-ab" href="{{url_for('createType',dbtype='antibody')}}">Add New Antibody</button>
+    {% else %}
+    {% endif %}
   </div>
 </div>
 {% for antibody in antibodies %}
@@ -43,8 +49,11 @@
             <th>Concentration (mg/mL)</th>
             <th>Vial Volume (mL)</th>
             <th>Available Vials</th>
+            {% if username %}
             <th>Edit</th>
             <th>Delete</th>
+            {% else %}
+            {% endif %}
           </tr>
         </thead>
         <tbody>
@@ -57,14 +66,20 @@
             <td>{{lot.concentration}}</td>
             <td>{{lot.vialVolume}}</td>
             <td>{{lot.vialNumber}}</td>
+            {% if userID==lot.user_id %}
             <td><button type="button" class="btn btn-warning" data-toggle="modal" data-target="#edit{{ lot.id }}" href="{{url_for('editTypeLot', dbtype='antibody', item_id=lot.id)}}">Edit</button></td>
             <td><button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteAbLot{{ lot.id }}">Delete</button></td>
+            {% else %}
+            {% endif %}
           </tr>
           {% endfor %}
           </tr>
         </tbody>
       </table>
+    {% if username %}
     <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-lot{{antibody.id}}" href="{{url_for('createTypeLot', dbtype='antibody', item_id=antibody.id)}}">Create New Lot</button></td>
+    {% else %}
+    {% endif %}
     </div>
   </div>
 </div>

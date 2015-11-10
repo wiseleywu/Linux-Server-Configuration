@@ -7,6 +7,18 @@ from sqlalchemy import create_engine
 
 Base = declarative_base()
 
+class User(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(250), nullable=False)
+    email = Column(String(250), nullable=False)
+    picture = image_attachment('UserImg')
+
+class UserImg(Base, Image):
+    __tablename__='user_img'
+    user_id=Column(Integer, ForeignKey('user.id'), primary_key=True)
+    user=relationship('User')
+
 class Antibody(Base):
     __tablename__='antibody'
     name=Column(String(80), nullable=False)
@@ -14,6 +26,8 @@ class Antibody(Base):
     weight=Column(Float, nullable=False)
     target=Column(String(80), nullable=False)
     picture=image_attachment('AntibodyImg')
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
     @property
     def serialize(self):
@@ -39,6 +53,8 @@ class AntibodyLot(Base):
     vialNumber=Column(Integer, nullable=False)
     antibody_id=Column(Integer, ForeignKey('antibody.id'))
     antibody=relationship('Antibody')
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
     @property
     def serialize(self):
@@ -60,6 +76,8 @@ class Cytotoxin(Base):
     weight=Column(Float, nullable=False)
     drugClass=Column(String(80), nullable=False)
     picture=image_attachment('CytotoxinImg')
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
 class CytotoxinImg(Base, Image):
     __tablename__='cytotoxin_img'
@@ -76,6 +94,8 @@ class CytotoxinLot(Base):
     vialNumber=Column(Integer, nullable=False)
     cytotoxin_id=Column(Integer, ForeignKey('cytotoxin.id'))
     cytotoxin=relationship('Cytotoxin')
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
 class Adc(Base):
     __tablename__='adc'
@@ -83,6 +103,8 @@ class Adc(Base):
     chemistry=Column(String(80), nullable=False)
     id=Column(Integer, primary_key=True)
     picture=image_attachment('AdcImg')
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
 class AdcLot(Base):
     __tablename__='adc_lot'
@@ -99,6 +121,8 @@ class AdcLot(Base):
     antibodylot=relationship(AntibodyLot)
     cytotoxinlot_id=Column(Integer, ForeignKey('cytotoxin_lot.id'))
     cytotoxinlot=relationship(CytotoxinLot)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
 class AdcImg(Base, Image):
     __tablename__='adc_img'
