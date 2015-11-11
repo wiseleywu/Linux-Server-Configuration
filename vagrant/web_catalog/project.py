@@ -19,11 +19,13 @@ import json
 from flask import make_response
 import requests
 from flask import session as login_session
+from flask.ext.seasurf import SeaSurf
 
 UPLOAD_FOLDER = '/uploads'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
 
 app = Flask(__name__)
+csrf = SeaSurf(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
@@ -49,6 +51,7 @@ def showLogin():
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
+@csrf.exempt
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
@@ -162,6 +165,7 @@ def getUserID(email):
         return None
 
 # DISCONNECT - Revoke a current user's token and reset their login_session
+@csrf.exempt
 @app.route('/gdisconnect')
 def gdisconnect():
         # Only disconnect a connected user.
