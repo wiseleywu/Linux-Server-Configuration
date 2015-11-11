@@ -15,49 +15,50 @@ def createRandomDate():
 	return lotdate
 
 #Add dummy user
-def createUser():
-	user=User(name='Wiseley', email='wiseleywu@gmail.com')
+def createUser(name, email, picture):
+	user=User(name=name, email=email)
 	session.add(user)
 	session.commit()
-	attach_picture_url(User, 1, 'https://lh6.googleusercontent.com/-45KCJFuShPk/AAAAAAAAAAI/AAAAAAAArRw/E7__AYvGSOQ/photo.jpg')
+	newUserID=session.query(User).filter_by(email=email).one().id
+	attach_picture_url(User, newUserID, picture)
 
 #Add Antibody
 def createAntibody():
     antibody1=Antibody(name='Amatuximab', weight=144330, target='Mesothelin', user_id=1)
     session.add(antibody1)
     session.commit()
-    antibody2=Antibody(name='Brentuximab', weight=153000, target='CD30', user_id=1)
+    antibody2=Antibody(name='Brentuximab', weight=153000, target='CD30', user_id=2)
     session.add(antibody2)
     session.commit()
-    antibody3=Antibody(name='Gemtuzumab', weight=152000, target='CD33', user_id=1)
+    antibody3=Antibody(name='Gemtuzumab', weight=152000, target='CD33', user_id=3)
     session.add(antibody3)
     session.commit()
     antibody4=Antibody(name='Trastuzumab', weight=148000, target='HER2/neu', user_id=1)
     session.add(antibody4)
     session.commit()
-    antibody5=Antibody(name='Vorsetuzumab', weight=150000, target='CD70', user_id=1)
+    antibody5=Antibody(name='Vorsetuzumab', weight=150000, target='CD70', user_id=2)
     session.add(antibody5)
     session.commit()
 
 #Add Antibody Lot
 def createAntibodyLot():
     for x in range(20):
-        antibodylot=AntibodyLot(date=createRandomDate(), aggregate=randint(0,5)+round(random.random(),2), endotoxin=randint(0,10)+round(random.random(),2),concentration=randint(0,10)+round(random.random(),2), vialVolume=random.choice([1,0.2,0.5]), vialNumber=randint(1,100), antibody_id=randint(1,5), user_id=1)
+        antibodylot=AntibodyLot(date=createRandomDate(), aggregate=randint(0,5)+round(random.random(),2), endotoxin=randint(0,10)+round(random.random(),2),concentration=randint(0,10)+round(random.random(),2), vialVolume=random.choice([1,0.2,0.5]), vialNumber=randint(1,100), antibody_id=randint(1,5), user_id=randint(1,3))
         session.add(antibodylot)
         session.commit()
 
 def createCytotoxin():
 	cytotoxin1=Cytotoxin(name='Maytansine', weight=692.19614, drugClass='tubulin inhibitor', user_id=1)
-	cytotoxin2=Cytotoxin(name='Monomethyl auristatin E', weight=717.97858, drugClass='antineoplastic agent', user_id=1)
-	cytotoxin3=Cytotoxin(name='Calicheamicin', weight=1368.34, drugClass='enediyne antitumor antibotics', user_id=1)
+	cytotoxin2=Cytotoxin(name='Monomethyl auristatin E', weight=717.97858, drugClass='antineoplastic agent', user_id=2)
+	cytotoxin3=Cytotoxin(name='Calicheamicin', weight=1368.34, drugClass='enediyne antitumor antibotics', user_id=3)
 	cytotoxin4=Cytotoxin(name='Mertansine', weight=477.47, drugClass='tubulin inhibitor', user_id=1)
-	cytotoxin5=Cytotoxin(name='Pyrrolobenzodiazepine', weight=25827, drugClass='DNA crosslinking agent', user_id=1)
+	cytotoxin5=Cytotoxin(name='Pyrrolobenzodiazepine', weight=25827, drugClass='DNA crosslinking agent', user_id=2)
 	session.add_all([cytotoxin1, cytotoxin2, cytotoxin3, cytotoxin4, cytotoxin5])
 	session.commit()
 
 def createCytotoxinLot():
     for x in range(20):
-        cytotoxinlot=CytotoxinLot(date=createRandomDate(), purity=randint(80,99)+round(random.random(),2), concentration=randint(0,10)+round(random.random(),2), vialVolume=random.choice([1,0.2,0.5]), vialNumber=randint(1,100), cytotoxin_id=randint(1,5), user_id=1)
+        cytotoxinlot=CytotoxinLot(date=createRandomDate(), purity=randint(80,99)+round(random.random(),2), concentration=randint(0,10)+round(random.random(),2), vialVolume=random.choice([1,0.2,0.5]), vialNumber=randint(1,100), cytotoxin_id=randint(1,5), user_id=randint(1,3))
         session.add(cytotoxinlot)
         session.commit()
 
@@ -83,10 +84,10 @@ def cytotoxinlot():
 
 def createADC():
 	adc1=Adc(name='Amatuximab maytansine', chemistry='lysine conjugation', user_id=1)
-	adc2=Adc(name='Brentuximab vedotin', chemistry='cysteine conjugation', user_id=1)
-	adc3=Adc(name='Gemtuzumab ozogamicin', chemistry='site-specific conjugation', user_id=1)
+	adc2=Adc(name='Brentuximab vedotin', chemistry='cysteine conjugation', user_id=2)
+	adc3=Adc(name='Gemtuzumab ozogamicin', chemistry='site-specific conjugation', user_id=3)
 	adc4=Adc(name='Trastuzumab emtansine', chemistry='engineered cysteine conjugation', user_id=1)
-	adc5=Adc(name='Vorsetuzumab pyrrolobenzodiazepine', chemistry='enzyme-assisted conjugation', user_id=1)
+	adc5=Adc(name='Vorsetuzumab pyrrolobenzodiazepine', chemistry='enzyme-assisted conjugation', user_id=2)
 	session.add_all([adc1, adc2, adc3, adc4, adc5])
 	session.commit()
 
@@ -112,7 +113,7 @@ def createADCLot():
 					  adc_id=randomlot,
 					  antibodylot_id=id1,
 					  cytotoxinlot_id=id2,
-					  user_id=1)
+					  user_id=randint(1,3))
 		session.add(adclot)
 		session.commit()
 
@@ -128,7 +129,9 @@ def attach_picture(table, item_id, location):
         raise
 
 if __name__ == '__main__':
-	createUser()
+	createUser('Wiseley Wu','wiseleywu@gmail.com','https://lh6.googleusercontent.com/-45KCJFuShPk/AAAAAAAAAAI/AAAAAAAArRw/E7__AYvGSOQ/photo.jpg')
+	createUser('John Doe','john.doe@gmail.com','http://themes.justgoodthemes.com/demo/getready/full-blue/images/John_Doe.jpg')
+	createUser('Jane Doe','jane.doe@gmail.com','http://stage48.net/wiki/images/thumb/3/3b/JaneDoeA.jpg/260px-JaneDoeA.jpg')
 	createAntibody()
 	createAntibodyLot()
 	createCytotoxin()

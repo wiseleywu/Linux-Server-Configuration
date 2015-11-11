@@ -218,12 +218,11 @@ def antibodyJSON():
 @app.route('/')
 @app.route('/home')
 def home():
-    username=None
-    loggedIn=False
+    userID, username = None, None
     if 'username' in login_session:
         username=login_session['username']
         loggedIn=True
-    return render_template('home.html', title='Home', loggedIn=loggedIn, username=username)
+    return render_template('home.html', title='Home', userID=userID, username=username)
 
 @app.route('/antibody/')
 def antibody():
@@ -277,6 +276,9 @@ def adc():
 
 @app.route('/<dbtype>/create', methods=['GET','POST'])
 def createType(dbtype):
+    if 'username' not in login_session:
+        flash('Sorry, the page you tried to access is for members only. Please sign in first.')
+        return redirect(url_for(dbtype))
     table=Table(dbtype, meta, autoload=True, autoload_with=engine)
     if request.method == 'POST':
         if dbtype == 'antibody':
@@ -298,9 +300,13 @@ def createType(dbtype):
 
 @app.route('/<dbtype>/<int:item_id>/create/', methods=['GET','POST'])
 def createTypeLot(dbtype, item_id):
+    if 'username' not in login_session:
+        flash('Sorry, the page you tried to access is for members only. Please sign in first.')
+        return redirect(url_for(dbtype))
     table=Table('%s_lot' %dbtype, meta, autoload=True, autoload_with=engine)
     maxablot=session.query(AntibodyLot).order_by(desc(AntibodyLot.id)).first().id
     maxtoxinlot=session.query(CytotoxinLot).order_by(desc(CytotoxinLot.id)).first().id
+    originID=session.query(eval(dbtype.capitalize())).filter_by(id=item_id).one().user_id
     if request.method == 'POST':
         if dbtype == 'antibody':
             new=AntibodyLot(date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d'), aggregate=request.form['aggregate'], endotoxin=request.form['endotoxin'], concentration=request.form['concentration'], vialVolume=request.form['vialVolume'], vialNumber=request.form['vialNumber'], antibody_id=item_id)
@@ -313,12 +319,18 @@ def createTypeLot(dbtype, item_id):
         flash('%s Lot Created' %dbtype.capitalize())
         return redirect(url_for(dbtype))
     else:
-        return render_template('create-type-lot.html', dbtype=dbtype, columns=table.columns, item_id=item_id, maxablot=maxablot, maxtoxinlot=maxtoxinlot)
+        return render_template('create-type-lot.html', dbtype=dbtype, columns=table.columns, item_id=item_id, maxablot=maxablot, maxtoxinlot=maxtoxinlot, originID=originID, userID=getUserID(login_session['email']))
 
 @app.route('/<dbtype>/<int:item_id>/edit', methods=['GET','POST'])
 def editType(dbtype, item_id):
-    table=Table(dbtype, meta, autoload=True, autoload_with=engine)
+    if 'username' not in login_session:
+        flash('Sorry, the page you tried to access is for members only. Please sign in first.')
+        return redirect(url_for(dbtype))
     editedItem = session.query(eval(dbtype.capitalize())).filter_by(id=item_id).one()
+    if login_session['user_id'] != editedItem.user_id:
+        flash('You are not authorized to modify items you did not create. Please create your own item in order to modify it.')
+        return redirect(url_for(dbtype))
+    table=Table(dbtype, meta, autoload=True, autoload_with=engine)
     if request.method == 'POST':
         image=request.files['picture']
         if image and allowed_file(image.filename):
@@ -338,10 +350,16 @@ def editType(dbtype, item_id):
 
 @app.route('/<dbtype>/lot/<int:item_id>/edit', methods=['GET','POST'])
 def editTypeLot(dbtype, item_id):
+    if 'username' not in login_session:
+        flash('Sorry, the page you tried to access is for members only. Please sign in first.')
+        return redirect(url_for(dbtype))
+    editedItem = session.query(eval(dbtype.capitalize()+'Lot')).filter_by(id=item_id).one()
+    if login_session['user_id'] != editedItem.user_id:
+        flash('You are not authorized to modify items you did not create. Please create your own item in order to modify it.')
+        return redirect(url_for(dbtype))
     table=Table('%s_lot' % dbtype, meta, autoload=True, autoload_with=engine)
     maxablot=session.query(AntibodyLot).order_by(desc(AntibodyLot.id)).first().id
     maxtoxinlot=session.query(CytotoxinLot).order_by(desc(CytotoxinLot.id)).first().id
-    editedItem = session.query(eval(dbtype.capitalize()+'Lot')).filter_by(id=item_id).one()
     if request.method == 'POST':
         editedItem.date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d')
         for column in table.columns:
@@ -359,7 +377,16 @@ def editTypeLot(dbtype, item_id):
 
 @app.route('/<dbtype>/<int:item_id>/delete/', methods=['GET','POST'])
 def delete(dbtype, item_id):
+    if 'username' not in login_session:
+        flash('Sorry, the page you tried to access is for members only. Please sign in first.')
+        if dbtype[-3:].lower() == 'lot':
+            return redirect(url_for(dbtype[:-3]))
+        else:
+            return redirect(url_for(dbtype))
     deleteItem=session.query(eval(dbtype[0].upper()+dbtype[1:])).filter_by(id=item_id).one()
+    if login_session['user_id'] != deleteItem.user_id:
+        flash('You are not authorized to modify items you did not create. Please create your own item in order to modify it.')
+        return redirect(url_for(dbtype))
     if request.method == 'POST':
         session.delete(deleteItem)
         session.commit()
