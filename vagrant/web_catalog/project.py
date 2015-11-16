@@ -117,7 +117,7 @@ def gconnect():
     login_session['gplus_id'] = gplus_id
 
     # Get user info
-    userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
+    userinfo_url = "https://www.googleapis.com/oauth2/v2/userinfo"
     params = {'access_token': access_token, 'alt': 'json'}
     answer = requests.get(userinfo_url, params=params)
 
@@ -147,10 +147,11 @@ def gconnect():
 
 def createUser(login_session):
     newUser = User(name=login_session['username'], email=login_session[
-                   'email'], picture=login_session['picture'])
+                   'email'])
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email=login_session['email']).one()
+    attach_picture_url(User, user.id, login_session['picture'])
     return user.id
 
 def getUserInfo(user_id):
@@ -367,7 +368,6 @@ def editTypeLot(dbtype, item_id):
     if request.method == 'POST':
         editedItem.date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d')
         for column in table.columns:
-            print column.name
             if column.name in ('id', 'date', 'antibody_id', 'cytotoxin_id', 'adc_id'):
                 pass
             else:
