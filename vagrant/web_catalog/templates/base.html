@@ -34,9 +34,9 @@
             {{ nav_link('adc', 'Antibody-Drug Conjugate') }}
           </ul>
           <div>
-            {% if username %}
+            {% if loggedIn %}
             <button type="button" class="btn btn-default navbar-btn navbar-right" href="/gdisconnect" data-toggle="modal" data-target="#sign-in">Sign Out</button>
-            <p class="navbar-text navbar-right" style="padding-right:20px">Signed in as <strong>{{username}}</strong></p>
+            <p class="navbar-text navbar-right" style="padding-right:20px">Signed in as <strong>{{email}}</strong></p>
             {% else %}
             <button type="button" class="btn btn-default navbar-btn" href="/login" data-toggle="modal" data-target="#sign-in" style="float:right">Sign In</button>
             {% endif %}

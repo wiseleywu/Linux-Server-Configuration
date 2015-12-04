@@ -14,6 +14,7 @@
           <input type="text" class="form-control" name="name" value="{{editedItem.name}}">
         </div>
         {% elif column.name=='id' %}
+        {% elif column.name=='user_id' %}
         {% elif column.name=='weight' %}
         <div class="form-group">
           <label for="weight">Molecular Weight</label>
@@ -38,8 +39,8 @@
         {% endif %}
         {% endfor %}
         <div class="form-group">
-          <label for="exampleInputFile">File input</label>
-          <input type="file" name="picture">
+          <label for="exampleInputFile">Molecular Structure</label>
+          <input type="file" name="picture" accept="image/*">
           <p class="help-block">Supported file types: bmp, gif, jpg, jpeg, png</p>
         </div>
         <button type="submit" class="btn btn-default">Submit</button>

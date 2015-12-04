@@ -16,18 +16,19 @@
     <h1>Antibody-Drug Conjugate</h1>
     <p>Antibody-drug conjugates or ADCs are a new class of highly potent biopharmaceutical drugs designed as a targeted therapy for the treatment of people with cancer. ADCs are complex molecules composed of an antibody (a whole mAb or an antibody fragment such as a single-chain variable fragment [scFv]) linked, via a stable, chemical, linker with labile bonds, to a biological active cytotoxic (anticancer) payload or drug. Antibody Drug Conjugates are examples of bioconjugates and immunoconjugates.</p>
     <p>By combining the unique targeting capabilities of monoclonal antibodies with the cancer-killing ability of cytotoxic drugs, antibody-drug conjugates allow sensitive discrimination between healthy and diseased tissue. This means that, in contrast to traditional chemotherapeutic agents, antibody-drug conjugates target and attack the cancer cell so that healthy cells are less severely affected.</p>
+    <P>The followings are ADCs that are currently available.</P>
     {% for adc in adcs %}
     <ul>
       <h3><li><a href="#{{adc.name}}">{{adc.name}}</a></li></h3>
       <button type="button" class="btn btn-info" data-toggle="modal" data-target="#imgADC{{ adc.id }}" href="{{ url_for('get_picture_url',item_id=adc.id, dbtype='adc') }}">Molecular Structure</button>
-      {% if userID==adc.user_id %}
+      {% if loggedIn and userID==adc.user_id %}
       <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editADC{{ adc.id }}" href="{{url_for('editType', dbtype='adc', item_id=adc.id)}}">Edit</button>
       <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteADC{{ adc.id }}">Delete</button>
       {% else %}
       {% endif %}
     </ul>
     {% endfor %}
-    {% if username %}
+    {% if loggedIn %}
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-adc" href="{{url_for('createType',dbtype='adc')}}">Add New ADC</button>
     {% else %}
     {% endif %}
@@ -50,7 +51,7 @@
             <th>Concentration (mg/mL)</th>
             <th>Vial Volume (mL)</th>
             <th>Available Vials</th>
-            {% if username %}
+            {% if loggedIn %}
             <th data-sortable="false">Edit</th>
             <th data-sortable="false">Delete</th>
             {% else %}
@@ -69,7 +70,7 @@
             <td>{{lot.concentration}}</td>
             <td>{{lot.vialVolume}}</td>
             <td>{{lot.vialNumber}}</td>
-            {% if userID==lot.user_id %}
+            {% if loggedIn and userID==lot.user_id %}
             <td><button type="button" class="btn btn-warning" data-toggle="modal" data-target="#edit{{ lot.id }}" href="{{url_for('editTypeLot', dbtype='adc', item_id=lot.id)}}">Edit</button></td>
             <td><button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteLot{{ lot.id }}">Delete</button></td>
             {% else %}
@@ -79,7 +80,7 @@
           </tr>
         </tbody>
       </table>
-    {% if username %}
+    {% if loggedIn %}
     <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#create-lot{{adc.id}}" href="{{url_for('createTypeLot', dbtype='adc', item_id=adc.id)}}">Create New Lot</button></td>
     {% else %}
     {% endif %}

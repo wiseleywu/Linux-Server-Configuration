@@ -10,7 +10,7 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
+    name = Column(String(250))
     email = Column(String(250), nullable=False)
     picture = image_attachment('UserImg')
 
@@ -31,10 +31,17 @@ class Antibody(Base):
 
     @property
     def serialize(self):
+        try:
+            url=self.picture.locate()
+        except IOError:
+            url=''
         return {
-            'Antibody ID':self.id,
-            'Molecular Weight':self.weight,
-            'Target':self.target
+            "Antibody_Id":self.id,
+            "Antibody_Name":self.name,
+            "Molecular_Weight":self.weight,
+            "Target":self.target,
+            "Picture_Url":url,
+            "User_Id":self.user_id
         }
 
 class AntibodyImg(Base, Image):
@@ -59,14 +66,15 @@ class AntibodyLot(Base):
     @property
     def serialize(self):
         return {
-            'Lot Number':self.id,
-            'Manufactured Date':str(self.date),
-            'Aggregate (%)':self.aggregate,
-            'Endotoxin (EU/mg)':self.endotoxin,
-            'Concentration (mg/mL)':self.concentration,
-            'Vial Volume (mL)':self.vialVolume,
-            'Available Vials':self.vialNumber,
-            'Antibody ID':self.antibody_id
+            "Lot_Number":self.id,
+            "Manufactured_Date":str(self.date),
+            "Aggregate_Percent":self.aggregate,
+            "Endotoxin_EU_per_mg":self.endotoxin,
+            "Concentration_mg_per_ml":self.concentration,
+            "Vial_Volume_ml":self.vialVolume,
+            "Available_Vials":self.vialNumber,
+            "Antibody_Id":self.antibody_id,
+            "User_Id":self.user_id
         }
 
 class Cytotoxin(Base):
@@ -78,6 +86,16 @@ class Cytotoxin(Base):
     picture=image_attachment('CytotoxinImg')
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
+
+    @property
+    def serialize(self):
+        return {
+            'Cytotoxin_Id':self.id,
+            'Molecular_Weight':self.weight,
+            'Drug_Class':self.drugClass,
+            'Picture_Url':self.picture.locate(),
+            'User_Id':self.user_id
+        }
 
 class CytotoxinImg(Base, Image):
     __tablename__='cytotoxin_img'
@@ -97,6 +115,19 @@ class CytotoxinLot(Base):
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
 
+    @property
+    def serialize(self):
+        return {
+            'Lot_Number':self.id,
+            'Manufactured_Date':str(self.date),
+            'Purity_Percent':self.purity,
+            'Concentration_mg_per_ml':self.concentration,
+            'Vial_Volume_ml':self.vialVolume,
+            'Available_Vials':self.vialNumber,
+            'Cytotoxin_Id':self.cytotoxin_id,
+            'User_Id':self.user_id
+        }
+
 class Adc(Base):
     __tablename__='adc'
     name=Column(String(80), nullable=False)
@@ -105,6 +136,15 @@ class Adc(Base):
     picture=image_attachment('AdcImg')
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
+
+    @property
+    def serialize(self):
+        return {
+            'Adc_Id':self.id,
+            'Conjugation_Chemistry':self.chemistry,
+            'Picture_Url':self.picture.locate(),
+            'User_Id':self.user_id
+        }
 
 class AdcLot(Base):
     __tablename__='adc_lot'
@@ -123,6 +163,22 @@ class AdcLot(Base):
     cytotoxinlot=relationship(CytotoxinLot)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
+
+    @property
+    def serialize(self):
+        return {
+            'Lot_Number':self.id,
+            'Manufactured_Date':str(self.date),
+            'Aggregate_Percent':self.aggregate,
+            'Endotoxin_EU_per_mg':self.endotoxin,
+            'Concentration_mg_per_ml':self.concentration,
+            'Vial_Volume_ml':self.vialVolume,
+            'Available_Vials':self.vialNumber,
+            'Antibody_Lot_Id':self.antibodylot_id,
+            'Cytotoxin_Lot_Id':self.cytotoxinlot_id,
+            'Adc_Id':self.adc_id,
+            'User_Id':self.user_id
+        }
 
 class AdcImg(Base, Image):
     __tablename__='adc_img'
