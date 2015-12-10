@@ -3,6 +3,10 @@ apt-get -qqy install postgresql python-psycopg2
 apt-get -qqy install python-flask python-sqlalchemy
 apt-get -qqy install python-pip
 apt-get -qqy install imagemagick
+apt-get -qqy install git
+apt-get -qqy install ruby-full
+wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
+gem install foreman
 pip install werkzeug==0.8.3
 pip install Flask-Login==0.1.3
 pip install SQLAlchemy-ImageAttach

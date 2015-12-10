@@ -8,12 +8,12 @@
     <meta name="google-signin-client_id" content="112174231466-2eq62a94fmpg5hde3t1pat8e4bo4k9u4.apps.googleusercontent.com">
     <title>Biologics Catalog - {% block title %}{% endblock %}</title>
     <link href="{{ url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/sortable-theme-bootstrap.css')}}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css')}}" rel="stylesheet">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-    <script src="//apis.google.com/js/platform.js?onload=start"> </script>
     <script src="{{ url_for('static', filename='js/sortable.min.js')}}"></script>
+    <script src="//apis.google.com/js/platform.js?onload=start"> </script>
   </head>
   <body>
     <nav class="navbar navbar-default navbar-fixed-top">
@@ -25,7 +25,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="home">Biologics Catalog</a>
+          <a class="navbar-brand" href="{{url_for('home')}}">Biologics Catalog</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
@@ -36,18 +36,12 @@
           </ul>
           <div>
             {% if loggedIn %}
-            <button type="button" class="btn btn-default navbar-btn navbar-right" href="/gdisconnect" data-toggle="modal" data-target="#sign-in">Sign Out</button>
+            <button type="button" class="btn btn-default navbar-btn navbar-right" href="/disconnect" data-toggle="modal" data-target="#sign-in">Sign Out</button>
             <p class="navbar-text navbar-right" style="padding-right:20px">Signed in as <strong>{{email}}</strong></p>
             {% else %}
             <button type="button" class="btn btn-default navbar-btn" href="/login" data-toggle="modal" data-target="#sign-in" style="float:right">Sign In</button>
             {% endif %}
           </div>
-          <!-- <form class="navbar-form navbar-right" role="search">
-            <div class="form-group">
-              <input type="text" class="form-control" placeholder="Search">
-            </div>
-            <button type="submit" class="btn btn-default">Submit</button>
-          </form> -->
         </div>
       </div>
     </nav>

@@ -125,6 +125,7 @@ def gconnect():
     login_session['username'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
+    login_session['provider'] = 'google'
 
     # see if user exists, if it doesn't make a new one
     user_id = getUserID(login_session['email'])
@@ -142,27 +143,70 @@ def gconnect():
     flash("you are now logged in as %s" % login_session['email'])
     return output
 
-# User Helper Functions
+@csrf.exempt
+@app.route('/fbconnect', methods=['POST'])
+def fbconnect():
+    if request.args.get('state') != login_session['state']:
+        response = make_response(json.dumps('Invalid state parameter.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    access_token = request.data
+    print "access token received %s " % access_token
 
-def createUser(login_session):
-    newUser = User(name=login_session['username'], email=login_session[
-                   'email'])
-    session.add(newUser)
-    session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
-    attach_picture_url(User, user.id, login_session['picture'])
-    return user.id
+    app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
+        'web']['app_id']
+    app_secret = json.loads(
+        open('fb_client_secrets.json', 'r').read())['web']['app_secret']
+    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
+        app_id, app_secret, access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
 
-def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
-    return user
+    # Use token to get user info from API
+    userinfo_url = "https://graph.facebook.com/v2.5/me"
+    # strip expire tag from access token
+    token = result.split("&")[0]
 
-def getUserID(email):
-    try:
-        user = session.query(User).filter_by(email=email).one()
-        return user.id
-    except:
-        return None
+    url = 'https://graph.facebook.com/v2.5/me?%s&fields=name,id,email' % token
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+    # print "url sent for API access:%s"% url
+    # print "API JSON result: %s" % result
+    data = json.loads(result)
+    login_session['provider'] = 'facebook'
+    login_session['username'] = data["name"]
+    login_session['email'] = data["email"]
+    login_session['facebook_id'] = data["id"]
+
+    # The token must be stored in the login_session in order to properly logout, let's strip out the information before the equals sign in our token
+    stored_token = token.split("=")[1]
+    login_session['access_token'] = stored_token
+
+    # Get user picture
+    url = 'https://graph.facebook.com/v2.5/me/picture?%s&redirect=0&height=200&width=200' % token
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+    data = json.loads(result)
+
+    login_session['picture'] = data["data"]["url"]
+
+    # see if user exists
+    user_id = getUserID(login_session['email'])
+    if not user_id:
+        user_id = createUser(login_session)
+    login_session['user_id'] = user_id
+
+    output = ''
+    output += '<h1>Welcome, '
+    output += login_session['username']
+
+    output += '!</h1>'
+    output += '<img src="'
+    output += login_session['picture']
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+
+    flash("Now logged in as %s" % login_session['username'])
+    return output
 
 # DISCONNECT - Revoke a current user's token and reset their login_session
 @csrf.exempt
@@ -196,47 +240,62 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-# Making an XML Endpoint
-@app.route('/<dbtype>/xml')
-def collections(dbtype):
-    collections=session.query(eval(dbtype.capitalize())).all()
-    return render_template('collections.xml', dbtype=dbtype, collections=collections)
+@csrf.exempt
+@app.route('/fbdisconnect')
+def fbdisconnect():
+    facebook_id = login_session['facebook_id']
+    # The access token must me included to successfully logout
+    access_token = login_session['access_token']
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id,access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'DELETE')[1]
+    return "you have been logged out"
 
-@app.route('/<dbtype>/lot/xml')
-def collectionLots(dbtype):
-    collections=session.query(eval(dbtype.capitalize()+'Lot')).all()
-    return render_template('collections-lot.xml', dbtype=dbtype, collections=collections)
+# Disconnect based on provider
+@csrf.exempt
+@app.route('/disconnect')
+def disconnect():
+    if 'provider' in login_session:
+        if login_session['provider'] == 'google':
+            gdisconnect()
+            del login_session['gplus_id']
+            del login_session['credentials']
+        if login_session['provider'] == 'facebook':
+            fbdisconnect()
+            del login_session['facebook_id']
+        del login_session['username']
+        del login_session['email']
+        del login_session['picture']
+        del login_session['user_id']
+        del login_session['provider']
+        flash("You have successfully been logged out.")
+        return redirect(url_for('home'))
+    else:
+        flash("You were not logged in")
+        return redirect(url_for('home'))
 
-# Making an JSON Endpoint (GET Request)
-@app.route('/antibody/JSON')
-def antibodyJSON():
-    antibodies=session.query(Antibody).all()
-    return jsonify(Antibodies=[i.serialize for i in antibodies])
+# User Helper Functions
+def createUser(login_session):
+    newUser = User(name=login_session['username'], email=login_session[
+                   'email'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    attach_picture_url(User, user.id, login_session['picture'])
+    return user.id
 
-@app.route('/cytotoxin/JSON')
-def cytotoxinJSON():
-    cytotoxins=session.query(Cytotoxin).all()
-    return jsonify(Cytotoxins=[i.serialize for i in cytotoxins])
+def getUserInfo(user_id):
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
 
-@app.route('/adc/JSON')
-def adcJSON():
-    adcs=session.query(Adc).all()
-    return jsonify(Adcs=[i.serialize for i in adcs])
+def getUserID(email):
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
 
-@app.route('/antibody/lot/JSON')
-def antibodyLotJSON():
-    lots=session.query(AntibodyLot).all()
-    return jsonify(Antibody_Lots=[i.serialize for i in lots])
 
-@app.route('/cytotoxin/lot/JSON')
-def cytotoxinLotJSON():
-    lots=session.query(CytotoxinLot).all()
-    return jsonify(Cytotoxin_Lots=[i.serialize for i in lots])
-
-@app.route('/adc/lot/JSON')
-def adcLotJSON():
-    lots=session.query(AdcLot).all()
-    return jsonify(Adc_Lots=[i.serialize for i in lots])
 
 @app.route('/')
 @app.route('/home')
@@ -476,6 +535,48 @@ def delete(dbtype, item_id):
             return redirect(url_for(dbtype))
     else:
         pass
+
+# Making an XML Endpoint
+@app.route('/<dbtype>/xml')
+def collections(dbtype):
+    collections=session.query(eval(dbtype.capitalize())).all()
+    return render_template('collections.xml', dbtype=dbtype, collections=collections)
+
+@app.route('/<dbtype>/lot/xml')
+def collectionLots(dbtype):
+    collections=session.query(eval(dbtype.capitalize()+'Lot')).all()
+    return render_template('collections-lot.xml', dbtype=dbtype, collections=collections)
+
+# Making an JSON Endpoint (GET Request)
+@app.route('/antibody/JSON')
+def antibodyJSON():
+    antibodies=session.query(Antibody).all()
+    return jsonify(Antibodies=[i.serialize for i in antibodies])
+
+@app.route('/cytotoxin/JSON')
+def cytotoxinJSON():
+    cytotoxins=session.query(Cytotoxin).all()
+    return jsonify(Cytotoxins=[i.serialize for i in cytotoxins])
+
+@app.route('/adc/JSON')
+def adcJSON():
+    adcs=session.query(Adc).all()
+    return jsonify(Adcs=[i.serialize for i in adcs])
+
+@app.route('/antibody/lot/JSON')
+def antibodyLotJSON():
+    lots=session.query(AntibodyLot).all()
+    return jsonify(Antibody_Lots=[i.serialize for i in lots])
+
+@app.route('/cytotoxin/lot/JSON')
+def cytotoxinLotJSON():
+    lots=session.query(CytotoxinLot).all()
+    return jsonify(Cytotoxin_Lots=[i.serialize for i in lots])
+
+@app.route('/adc/lot/JSON')
+def adcLotJSON():
+    lots=session.query(AdcLot).all()
+    return jsonify(Adc_Lots=[i.serialize for i in lots])
 
 @app.errorhandler(401)
 def access_denied(e):
