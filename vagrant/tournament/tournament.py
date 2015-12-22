@@ -84,7 +84,7 @@ def countPlayers():
     db = connect()
     c = db.cursor()
     query = '''
-    SELECT count(*) AS total FROM players;
+    SELECT count(*) FROM players;
     '''
     c.execute(query)
     count = c.fetchone()
@@ -258,8 +258,8 @@ def swissPairings(printing=False):
         pass
     else:
         while True:
-            n=randint(0,countPlayers()-1)
-            if standings[n][-1]:
+            n=randint(0,countPlayers()-1) #picking a random player for BYE
+            if standings[n][-1]: #making sure the player hasn't received BYE yet
                 pass
             else:
                 bye=standings.pop(n)
@@ -267,11 +267,11 @@ def swissPairings(printing=False):
                 break
 #    reorderedStandings=rematchProof(standings)
     for round in range(0,int(countPlayers()/2.)):
-        matches.append((standings[ranking][0],
-                        standings[ranking][1],
-                        standings[ranking+1][0],
-                        standings[ranking+1][1]))
-        ranking+=2
+        matches.append((standings[ranking][0], # player 1 id
+                        standings[ranking][1], # player 1 name
+                        standings[ranking+1][0], # player 2 id
+                        standings[ranking+1][1])) # player 2 name
+        ranking+=2 #skip one row since there are two rows per match
     return matches
 
 # def rematchProof(standings):

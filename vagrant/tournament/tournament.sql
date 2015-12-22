@@ -6,6 +6,9 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+
+-- this file is no longer needed, as tournament.py is able to initialize
+-- new database and table. This is only provided as reference.
 drop database IF EXISTS tournament;
 drop sequence IF EXISTS number;
 create database tournament;
