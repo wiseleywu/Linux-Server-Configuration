@@ -120,6 +120,12 @@ def playerStandings(extended=False):
     The first entry in the list should be the player in first place, or a player
     tied for first place if there is currently a tie.
 
+    Args:
+      extended: When false, the function will only return playerStandings with 4
+      columns (id, name, wins, matches). This is implemented to make extra
+      functionalities compatible to unit tests within tournament_test.py.
+      Default is false
+
     Returns:
       A list of tuples, each of which contains
       (id, name, matches, wins, omw, points):
@@ -199,6 +205,9 @@ def reportMatch(player1, player2, random=False):
     Args:
       player1:  the id number of player 1
       player2:  the id number of player 2
+      random: if false, player1 is the winner while player2 is the loser. This
+      is implemented to make extra functionalities compatible to unit tests
+      within tournament_test.py. Default is false
     """
     db = connect()
     c = db.cursor()
