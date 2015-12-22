@@ -13,16 +13,7 @@ create database tournament;
 create table players(player_id serial primary key, name text);
 create table matches(match_num integer,
                      player_id integer references players,
-                     win integer);
+                     play_against integer references players,
+                     wins integer,
+                     points integer);
 create sequence number;
---insert into players (name) values ('banana');
---insert into players (name) values ('cucumber');
---insert into players (name) values ('date');
---insert into matches values (1,1,1);
---insert into matches values (1,2,0);
---insert into matches values (2,3,1);
---insert into matches values (2,4,0);
---insert into matches values (3,1,1);
---insert into matches values (3,3,0);
---insert into matches values (4,2,1);
---insert into matches values (4,4,0);
