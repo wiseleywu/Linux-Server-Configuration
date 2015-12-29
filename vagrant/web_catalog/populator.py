@@ -119,8 +119,8 @@ def createADCLot():
 
 if __name__ == '__main__':
 	createUser('Wiseley Wu','wiseleywu@gmail.com','https://lh6.googleusercontent.com/-45KCJFuShPk/AAAAAAAAAAI/AAAAAAAArRw/E7__AYvGSOQ/photo.jpg')
-	createUser('John Doe','john.doe@gmail.com','http://themes.justgoodthemes.com/demo/getready/full-blue/images/John_Doe.jpg')
-	createUser('Jane Doe','jane.doe@gmail.com','http://stage48.net/wiki/images/thumb/3/3b/JaneDoeA.jpg/260px-JaneDoeA.jpg')
+	createUser('John Doe','john.doe@gmail.com','http://localhost:5000/static/images/user.png')
+	createUser('Jane Doe','jane.doe@gmail.com','http://localhost:5000/static/images/user.png')
 	createAntibody()
 	createAntibodyLot()
 	createCytotoxin()
@@ -128,7 +128,7 @@ if __name__ == '__main__':
 	createADC()
 	createADCLot()
 	for x in range(1,6):
-		attach_picture_url(Antibody, x, 'http://www.prosci-inc.com/media/wysiwyg/antibody.png')
-		attach_picture_url(Cytotoxin, x, 'http://www.prosci-inc.com/media/wysiwyg/antibody.png')
-		attach_picture_url(Adc, x, 'http://www.prosci-inc.com/media/wysiwyg/antibody.png')
+		attach_picture_url(Antibody, x, 'http://localhost:5000/static/images/antibody.png')
+		attach_picture_url(Cytotoxin, x, 'http://localhost:5000/static/images/antibody.png')
+		attach_picture_url(Adc, x, 'http://localhost:5000/static/images/antibody.png')
 	print 'Database Populated'

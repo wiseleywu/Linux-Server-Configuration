@@ -147,7 +147,7 @@ def gconnect():
     output += '<img src="'
     output += login_session['picture']
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    flash("you are now logged in as %s" % login_session['email'])
+    flash("You are now signed in as %s" % login_session['email'])
     return output
 
 @csrf.exempt
@@ -213,7 +213,7 @@ def fbconnect():
     output += login_session['picture']
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
 
-    flash("Now logged in as %s" % login_session['username'])
+    flash("You are now signed in as %s" % login_session['username'])
     return output
 
 # DISCONNECT - Revoke a current user's token and reset their login_session
