@@ -36,7 +36,7 @@
           </ul>
           <div>
             {% if loggedIn %}
-            <button type="button" class="btn btn-default navbar-btn navbar-right" href="/disconnect" data-toggle="modal" data-target="#sign-in">Sign Out</button>
+            <button type="button" class="btn btn-default navbar-btn navbar-right" href="/disconnect" data-toggle="modal" data-target="#sign-out">Sign Out</button>
             <p class="navbar-text navbar-right" style="padding-right:20px">Signed in as <strong>{{email}}</strong></p>
             {% else %}
             <button type="button" class="btn btn-default navbar-btn" href="/login" data-toggle="modal" data-target="#sign-in" style="float:right">Sign In</button>
@@ -51,6 +51,22 @@
         </div>
       </div>
     </div>
+    <div class="modal fade" id="sign-out" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <!-- <p style="text-align:center">You have been successfully logged out</p> -->
+          </div>
+        </div>
+      </div>
+    </div>
     {% block content %}{% endblock %}
+    <script>
+      $('#sign-out').on('shown.bs.modal', function () {
+        setTimeout(function() {
+          location.reload();
+        }, 1000);
+      });
+    </script>
   </body>
 </html>

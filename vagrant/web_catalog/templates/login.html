@@ -10,32 +10,24 @@
 <!-- END PRE-REQUISITES FOR GOOGLE SIGN IN -->
 </head>
 <body>
-  <div class="modal-body">
-    <div class="row">
-      <div class="col-md-12">
-        <h1 style="text-align: center">Hello!</h1>
-        <h1 style="text-align: center">Please choose the following options to sign-in</h1>
-      </div>
+  <div class="modal-body sign-in">
+    <div>
+      <h1 class="sign-in-text"><strong>Please choose the following options to sign-in</strong></h1>
     </div>
-    <div class="row">
-      <div class="col-md-12">
-        <!-- GOOGLE Button-->
-        <div class="signin-button" id="signInButton">
-          <span class="g-signin"
-            data-scope="openid email"
-            data-clientid="112174231466-2eq62a94fmpg5hde3t1pat8e4bo4k9u4.apps.googleusercontent.com"
-            data-redirecturi="postmessage"
-            data-accesstype="offline"
-            data-cookiepolicy="single_host_origin"
-            data-callback="signInCallback"
-            data-approvalprompt="force">
-          </span>
-          <!-- Facebook Button-->
-          <fb:login-button size="xlarge" style="padding-bottom:12px" scope="public_profile,email" onlogin="sendTokenToServer();">
-            <a href='javascript:sendTokenToServer()'>Facebook</a>
-          </fb:login-button>
-        </div>
-      </div>
+    <fb:login-button size="large" scope="public_profile,email" onlogin="sendTokenToServer();" class="btn btn-block">
+      <a href='javascript:sendTokenToServer()'>Login with Facebook</a>
+    </fb:login-button>
+    <div class="btn btn-block">
+      <span class="g-signin"
+        data-scope="openid email"
+        data-clientid="112174231466-2eq62a94fmpg5hde3t1pat8e4bo4k9u4.apps.googleusercontent.com"
+        data-redirecturi="postmessage"
+        data-accesstype="offline"
+        data-cookiepolicy="single_host_origin"
+        data-callback="signInCallback"
+        data-approvalprompt="force">
+      </span>
+    </div>
   </div>
 
   <script>
@@ -56,7 +48,7 @@
             $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
            setTimeout(function() {
             window.location.href = "/home";
-           }, 4000);
+          }, 1000);
 
         } else if (authResult['error']) {
       console.log('There was an error: ' + authResult['error']);
@@ -107,7 +99,7 @@
             $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
             setTimeout(function() {
               window.location.href = "/home";
-            }, 4000);
+            }, 1000);
           } else {
             $('#result').html('Failed to make a server-side call. Check your configuration and console.');
           }
