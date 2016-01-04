@@ -27,6 +27,7 @@ class Profile(ndb.Model):
     mainEmail = ndb.StringProperty()
     teeShirtSize = ndb.StringProperty(default='NOT_SPECIFIED')
     conferenceKeysToAttend = ndb.StringProperty(repeated=True)
+    sessionKeysToAttend = ndb.StringProperty(repeated=True)
 
 class ProfileMiniForm(messages.Message):
     """ProfileMiniForm -- update Profile form message"""
@@ -39,6 +40,7 @@ class ProfileForm(messages.Message):
     mainEmail = messages.StringField(2)
     teeShirtSize = messages.EnumField('TeeShirtSize', 3)
     conferenceKeysToAttend = messages.StringField(4, repeated=True)
+    sessionKeysToAttend = messages.StringField(5, repeated=True)
 
 class StringMessage(messages.Message):
     """StringMessage-- outbound (single) string message"""
@@ -108,3 +110,43 @@ class ConferenceQueryForms(messages.Message):
     """ConferenceQueryForms -- multiple ConferenceQueryForm inbound form message"""
     filters = messages.MessageField(ConferenceQueryForm, 1, repeated=True)
 
+class Session(ndb.Model):
+    """Session - Conference's Session Object"""
+    name            = ndb.StringProperty(required=True)
+    sessionType     = ndb.StringProperty()
+    organizerUserId = ndb.StringProperty()
+    speakerId       = ndb.IntegerProperty()
+    highlight       = ndb.StringProperty()
+    startTime       = ndb.DateTimeProperty()
+    endTime         = ndb.DateTimeProperty()
+    maxAttendees    = ndb.IntegerProperty()
+    seatsAvailable  = ndb.IntegerProperty()
+
+class SessionForm(messages.Message):
+    """SessionForm -- Session outbound form message"""
+    name            = messages.StringField(1)
+    sessionType     = messages.StringField(2)
+    organizerUserId = messages.StringField(3)
+    speakerId       = messages.IntegerField(4, variant=messages.Variant.INT32)
+    highlight       = messages.StringField(5)
+    startTime       = messages.StringField(6)
+    endTime         = messages.StringField(7)
+    maxAttendees    = messages.IntegerField(8, variant=messages.Variant.INT32)
+    seatsAvailable  = messages.IntegerField(9, variant=messages.Variant.INT32)
+    websafeKey      = messages.StringField(10)
+
+class SessionForms(messages.Message):
+    """SessionForms -- multiple Session outbound form message"""
+    items = messages.MessageField(SessionForm, 1, repeated=True)
+
+class Speaker(ndb.Model):
+    """Speaker -- Session Speaker Object"""
+    displayName = ndb.StringProperty(required=True)
+    mainEmail = ndb.StringProperty(required=True)
+    sessionKeysToAttend = ndb.StringProperty(repeated=True)
+
+class SpeakerForm(messages.Message):
+    """SpeakerForm -- Speaker outbound form message"""
+    displayName = messages.StringField(1)
+    mainEmail = messages.StringField(2)
+    sessionKeysToAttend = messages.StringField(3, repeated=True)
