@@ -94,3 +94,26 @@ indexes:
   properties:
   - name: topics
   - name: name
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: endTime
+  - name: startTime
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: startTime
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: startTime
+  - name: endTime
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: startTime
+    direction: desc

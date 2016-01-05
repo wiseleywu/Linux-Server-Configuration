@@ -13,7 +13,7 @@ created by wesc on 2014 apr 21
 __author__ = 'wesc+api@google.com (Wesley Chun)'
 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import endpoints
 from protorpc import messages
@@ -49,6 +49,7 @@ from utils import getUserId
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
 MEMCACHE_ANNOUNCEMENTS_KEY = "RECENT_ANNOUNCEMENTS"
+MEMCACHE_SPEAKER_KEY = "FEATURED_SPEAKER"
 ANNOUNCEMENT_TPL = ('Last chance to attend! The following conferences '
                     'are nearly sold out: %s')
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -117,6 +118,7 @@ SESSION_QUERY_TYPE = endpoints.ResourceContainer(
     message_types.VoidMessage,
     websafeConferenceKey=messages.StringField(1),
     type=messages.StringField(2),
+    hour=messages.IntegerField(3, variant=messages.Variant.INT32),
 )
 
 SPEAKER_GET_REQUEST = endpoints.ResourceContainer(
@@ -184,9 +186,8 @@ class ConferenceApi(remote.Service):
             data['month'] = 0
         if data['endDate']:
             data['endDate'] = datetime.strptime(data['endDate'][:10], "%Y-%m-%d").date()
-
         # set seatsAvailable to be same as maxAttendees on creation
-        if data["maxAttendees"] > 0:
+        if data["maxAttendees"] > 0 and data["seatsAvailable"]==None:
             data["seatsAvailable"] = data["maxAttendees"]
         # generate Profile Key based on user ID and Conference
         # ID based on Profile key get Conference key from ID
@@ -614,7 +615,6 @@ class ConferenceApi(remote.Service):
         if not user:
             raise endpoints.UnauthorizedException('Authorization required')
         user_id = getUserId(user)
-
         # find parent conference
         conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
         # check that conference exists
@@ -627,6 +627,7 @@ class ConferenceApi(remote.Service):
                 'Only the owner can add session to the conference')
         # copy SessionForm/ProtoRPC Message into dict
         data = {field.name: getattr(request, field.name) for field in request.all_fields()}
+        wsck=data['websafeConferenceKey']
         del data['websafeKey']
         del data['websafeConferenceKey']
         # add default values for those missing (both data model & outbound Message)
@@ -635,10 +636,10 @@ class ConferenceApi(remote.Service):
                 data[df] = SESSION_DEFAULTS[df]
                 setattr(request, df, SESSION_DEFAULTS[df])
         if data['startTime']:
-            data['startTime'] = datetime.strptime(data['startTime'][:10], "%Y-%m-%d").date()
+            data['startTime'] = datetime.strptime(data['startTime'], "%Y-%m-%d %H:%M:%S")
         if data['endTime']:
-            data['endTime'] = datetime.strptime(data['endTime'][:10], "%Y-%m-%d").date()
-        if data["maxAttendees"] > 0:
+            data['endTime'] = datetime.strptime(data['endTime'], "%Y-%m-%d %H:%M:%S")
+        if data["maxAttendees"] > 0 and data["seatsAvailable"]==None:
             data["seatsAvailable"] = data["maxAttendees"]
         c_key = conf.key
         s_id = Session.allocate_ids(size=1, parent=c_key)[0]
@@ -648,6 +649,9 @@ class ConferenceApi(remote.Service):
 
         # creation of Conference & return (modified) ConferenceForm
         Session(**data).put()
+        taskqueue.add(params={'wsck':wsck, 'speakerId':data['speakerId']},
+                        url='/tasks/check_featured_speaker'
+                    )
         return self._copySessionToForm(request)
 
     def _updateSessionObject(self, request):
@@ -669,24 +673,27 @@ class ConferenceApi(remote.Service):
             if data not in (None, []):
                 # special handling for dates (convert string to Date)
                 if field.name in ('startTime', 'endTime'):
-                    data = datetime.strptime(data, "%Y-%m-%d").date()
+                    data = datetime.strptime(data, "%Y-%m-%d %H:%M:%S")
                 # write to Session object
                 setattr(session, field.name, data)
         session.put()
         return self._copySessionToForm(session)
 
-    @ndb.transactional(xg=True)
     def _sessionRegistration(self, request, reg=True):
         retval=None
         user=endpoints.get_current_user()
         if not user:
             raise endpoints.UnauthorizedException('Authorization required')
+        user_id = getUserId(user)
         prof = self._getProfileFromUser()
         wssk=request.websafeSessionKey
         session=ndb.Key(urlsafe=wssk).get()
         if not session:
             raise endpoints.NotFoundException(
                 'No session found with key: %s' % wssk)
+        if user_id != session.organizerUserId:
+            raise endpoints.ForbiddenException(
+                'Only the owner can place this session in the wishlist.')
         wsck=session.key.parent().urlsafe()
         if wsck not in prof.conferenceKeysToAttend:
             raise ConflictException(
@@ -765,6 +772,21 @@ class ConferenceApi(remote.Service):
             items=[self._copySessionToForm(session) for session in sessions]
         )
 
+    # @endpoints.method(SESSION_QUERY_TYPE, SessionForms,
+    #         path='getConferenceSessionsByHour/{hour}',
+    #         http_method='GET', name='getConferenceSessionsByHour')
+    # def getConferenceSessionsByHour(self,request):
+    #     """Return sessions given a conference object and duration (hour)"""
+    #     conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
+    #     sessions = Session.query(ancestor=conf.key)
+    #     #temp workaroud since the 2nd filter clause picks up all sessions even
+    #     #if startTime=None
+    #     sessions = sessions.filter(Session.startTime != None)
+    #     sessions = sessions.filter(Session.startTime < datetime(2016,01,10,17,00))
+    #     return SessionForms(
+    #         items=[self._copySessionToForm(session) for session in sessions]
+    #     )
+
     @endpoints.method(SPEAKER_GET_REQUEST, SessionForms,
             path='getSessionsBySpeaker/{speakerId}',
             http_method='GET', name='getSessionsBySpeaker')
@@ -786,8 +808,8 @@ class ConferenceApi(remote.Service):
 
     @endpoints.method(SESSION_GET_REQUEST, BooleanMessage,
             path='session/{websafeSessionKey}',
-            http_method='DELETE', name='removeSessionFromWishList')
-    def removeSessionFromWishList(self, request):
+            http_method='DELETE', name='deleteSessionInWishlist')
+    def deleteSessionInWishlist(self, request):
         """Remove session from user's wishlist."""
         return self._sessionRegistration(request, reg=False)
 
@@ -826,5 +848,12 @@ class ConferenceApi(remote.Service):
         """Get Speaker Object given websafeSpeakerKey"""
         speaker=ndb.Key(Speaker, request.speakerId).get()
         return self._copySpeakerToForm(speaker)
+
+    @endpoints.method(message_types.VoidMessage, StringMessage,
+            path='conference/featured_speaker/get',
+            http_method='GET', name='getFeaturedSpeaker')
+    def getFeaturedSpeaker(self, request):
+        """Return featured speaker from memcache."""
+        return StringMessage(data=memcache.get(MEMCACHE_SPEAKER_KEY) or "")
 
 api = endpoints.api_server([ConferenceApi]) # register API
