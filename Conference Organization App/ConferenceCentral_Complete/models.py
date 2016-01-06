@@ -117,10 +117,9 @@ class Session(ndb.Model):
     organizerUserId = ndb.StringProperty()
     speakerId       = ndb.IntegerProperty()
     highlight       = ndb.StringProperty()
-    startTime       = ndb.DateTimeProperty()
-    endTime         = ndb.DateTimeProperty()
-    maxAttendees    = ndb.IntegerProperty()
-    seatsAvailable  = ndb.IntegerProperty()
+    date            = ndb.DateProperty()
+    startTime       = ndb.TimeProperty()
+    duration_minutes= ndb.IntegerProperty()
 
 class SessionForm(messages.Message):
     """SessionForm -- Session outbound form message"""
@@ -129,15 +128,20 @@ class SessionForm(messages.Message):
     organizerUserId = messages.StringField(3)
     speakerId       = messages.IntegerField(4, variant=messages.Variant.INT32)
     highlight       = messages.StringField(5)
-    startTime       = messages.StringField(6)
-    endTime         = messages.StringField(7)
-    maxAttendees    = messages.IntegerField(8, variant=messages.Variant.INT32)
-    seatsAvailable  = messages.IntegerField(9, variant=messages.Variant.INT32)
-    websafeKey      = messages.StringField(10)
+    date            = messages.StringField(6)
+    startTime       = messages.StringField(7)
+    duration_minutes= messages.IntegerField(8, variant=messages.Variant.INT32)
+    websafeKey      = messages.StringField(9)
 
 class SessionForms(messages.Message):
     """SessionForms -- multiple Session outbound form message"""
     items = messages.MessageField(SessionForm, 1, repeated=True)
+
+class SessionQueryForm(messages.Message):
+    """SessioneQueryForm -- Session query inbound form message"""
+    sessionType = messages.StringField(1, repeated=True)
+    operator = messages.StringField(2)
+    time = messages.IntegerField(3, variant=messages.Variant.INT32, default=None)
 
 class Speaker(ndb.Model):
     """Speaker -- Session Speaker Object"""

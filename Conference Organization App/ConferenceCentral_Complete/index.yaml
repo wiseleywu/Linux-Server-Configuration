@@ -98,7 +98,24 @@ indexes:
 - kind: Session
   ancestor: yes
   properties:
+  - name: duration_minutes
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: duration_minutes
+  - name: startTime
+
+- kind: Session
+  ancestor: yes
+  properties:
   - name: endTime
+  - name: startTime
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: sessionType
   - name: startTime
 
 - kind: Session
@@ -110,7 +127,19 @@ indexes:
   ancestor: yes
   properties:
   - name: startTime
+  - name: duration_minutes
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: startTime
   - name: endTime
+
+- kind: Session
+  ancestor: yes
+  properties:
+  - name: startTime
+  - name: sessionType
 
 - kind: Session
   ancestor: yes

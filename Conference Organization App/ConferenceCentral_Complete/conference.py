@@ -36,7 +36,7 @@ from models import ConferenceForms
 from models import ConferenceQueryForm
 from models import ConferenceQueryForms
 from models import TeeShirtSize
-from models import Session, SessionForm, SessionForms
+from models import Session, SessionForm, SessionForms, SessionQueryForm
 from models import Speaker, SpeakerForm
 
 from settings import WEB_CLIENT_ID
@@ -64,8 +64,7 @@ DEFAULTS = {
 SESSION_DEFAULTS = {
     "sessionType": "Default Type",
     "highlight": "Default Highlight",
-    "maxAttendees": 0,
-    "seatsAvailable": 0,
+    "duration_minutes": None,
 }
 
 OPERATORS = {
@@ -86,6 +85,11 @@ FIELDS =    {
 
 CONF_GET_REQUEST = endpoints.ResourceContainer(
     message_types.VoidMessage,
+    websafeConferenceKey=messages.StringField(1),
+)
+
+CONF_GET_SIMILAR = endpoints.ResourceContainer(
+    ConferenceQueryForm,
     websafeConferenceKey=messages.StringField(1),
 )
 
@@ -118,7 +122,11 @@ SESSION_QUERY_TYPE = endpoints.ResourceContainer(
     message_types.VoidMessage,
     websafeConferenceKey=messages.StringField(1),
     type=messages.StringField(2),
-    hour=messages.IntegerField(3, variant=messages.Variant.INT32),
+)
+
+SESSION_QUERY_TIME = endpoints.ResourceContainer(
+    SessionQueryForm,
+    websafeConferenceKey=messages.StringField(1),
 )
 
 SPEAKER_GET_REQUEST = endpoints.ResourceContainer(
@@ -369,6 +377,24 @@ class ConferenceApi(remote.Service):
                 conferences]
         )
 
+    @endpoints.method(CONF_GET_SIMILAR, ConferenceForms,
+            path='querySimilarConferences/{websafeConferenceKey}',
+            http_method='POST',
+            name='querySimilarConferences')
+    def querySimilarConferences(self, request):
+        """Query for similar conferences by the same creator."""
+        conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
+        if not conf:
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % request.websafeConferenceKey)
+        prof = conf.key.parent().get()
+        node = ndb.query.FilterNode(request.field, OPERATORS[request.operator], request.value)
+        conferences = Conference.query(ancestor=prof.key).filter(Conference.key!=conf.key).filter(node)
+        # return individual ConferenceForm object per Conference
+        return ConferenceForms(
+                items=[self._copyConferenceToForm(conf, prof.mainEmail) for conf in \
+                conferences]
+        )
 
 # - - - Profile objects - - - - - - - - - - - - - - - - - - -
 
@@ -599,8 +625,7 @@ class ConferenceApi(remote.Service):
         sf = SessionForm()
         for field in sf.all_fields():
             if hasattr(session, field.name):
-                # convert Date to date string; just copy others
-                if field.name.endswith('Time'):
+                if field.name in ['date','startTime']:
                     setattr(sf, field.name, str(getattr(session, field.name)))
                 else:
                     setattr(sf, field.name, getattr(session, field.name))
@@ -635,12 +660,10 @@ class ConferenceApi(remote.Service):
             if data[df] in (None, []):
                 data[df] = SESSION_DEFAULTS[df]
                 setattr(request, df, SESSION_DEFAULTS[df])
+        if data['date']:
+            data['date'] = datetime.strptime(data['date'][:10], "%Y-%m-%d").date()
         if data['startTime']:
-            data['startTime'] = datetime.strptime(data['startTime'], "%Y-%m-%d %H:%M:%S")
-        if data['endTime']:
-            data['endTime'] = datetime.strptime(data['endTime'], "%Y-%m-%d %H:%M:%S")
-        if data["maxAttendees"] > 0 and data["seatsAvailable"]==None:
-            data["seatsAvailable"] = data["maxAttendees"]
+            data['startTime'] = datetime.strptime(data['startTime'], "%H:%M:%S").time()
         c_key = conf.key
         s_id = Session.allocate_ids(size=1, parent=c_key)[0]
         s_key = ndb.Key(Session, s_id, parent=c_key)
@@ -649,9 +672,10 @@ class ConferenceApi(remote.Service):
 
         # creation of Conference & return (modified) ConferenceForm
         Session(**data).put()
-        taskqueue.add(params={'wsck':wsck, 'speakerId':data['speakerId']},
-                        url='/tasks/check_featured_speaker'
-                    )
+        if data['speakerId']:
+            taskqueue.add(params={'wsck':wsck, 'speakerId':data['speakerId']},
+                            url='/tasks/check_featured_speaker'
+                        )
         return self._copySessionToForm(request)
 
     def _updateSessionObject(self, request):
@@ -671,10 +695,10 @@ class ConferenceApi(remote.Service):
             data = getattr(request, field.name)
             # only copy fields where we get data
             if data not in (None, []):
-                # special handling for dates (convert string to Date)
-                if field.name in ('startTime', 'endTime'):
-                    data = datetime.strptime(data, "%Y-%m-%d %H:%M:%S")
-                # write to Session object
+                if field.name == 'date':
+                    data = datetime.strptime(data[:10], "%Y-%m-%d").date()
+                if field.name == 'startTime':
+                    data = datetime.strptime(data, "%H:%M:%S").time()
                 setattr(session, field.name, data)
         session.put()
         return self._copySessionToForm(session)
@@ -735,7 +759,6 @@ class ConferenceApi(remote.Service):
             http_method='GET', name='getSession')
     def getSession(self, request):
         """Return requested session (by websafeSessionKey)."""
-        # get Session object from request; bail if not found
         session = ndb.Key(urlsafe=request.websafeSessionKey).get()
         if not session:
             raise endpoints.NotFoundException(
@@ -748,6 +771,9 @@ class ConferenceApi(remote.Service):
     def getConferenceSessions(self, request):
         """Return sessions given a websafeConferenceKey"""
         conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
+        if not conf:
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % request.websafeConferenceKey)
         sessions = Session.query(ancestor=conf.key)
         return SessionForms(
             items=[self._copySessionToForm(session) for session in sessions]
@@ -772,20 +798,50 @@ class ConferenceApi(remote.Service):
             items=[self._copySessionToForm(session) for session in sessions]
         )
 
-    # @endpoints.method(SESSION_QUERY_TYPE, SessionForms,
-    #         path='getConferenceSessionsByHour/{hour}',
-    #         http_method='GET', name='getConferenceSessionsByHour')
-    # def getConferenceSessionsByHour(self,request):
-    #     """Return sessions given a conference object and duration (hour)"""
-    #     conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
-    #     sessions = Session.query(ancestor=conf.key)
-    #     #temp workaroud since the 2nd filter clause picks up all sessions even
-    #     #if startTime=None
-    #     sessions = sessions.filter(Session.startTime != None)
-    #     sessions = sessions.filter(Session.startTime < datetime(2016,01,10,17,00))
-    #     return SessionForms(
-    #         items=[self._copySessionToForm(session) for session in sessions]
-    #     )
+    @endpoints.method(CONF_GET_SIMILAR, SessionForms,
+            path='querySessionLength/{websafeConferenceKey}',
+            http_method='POST', name='querySessionLength')
+    def querySessionLength(self, request):
+        """Return sessions given a conference object and duration (minutes)"""
+        conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
+        if not conf:
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % request.websafeConferenceKey)
+        sessions = Session.query(ancestor=conf.key).order(Session.duration_minutes)
+        #temp workaroud since the 2nd filter clause picks up all sessions even
+        #if the data=None
+        sessions = sessions.filter(Session.duration_minutes != None)
+        if (request.field and request.operator and request.value):
+            node = ndb.query.FilterNode(request.field, OPERATORS[request.operator], int(request.value))
+            sessions = sessions.filter(node)
+        elif (request.field or request.operator or request.value):
+            raise endpoints.BadRequestException("You need to define field, operator, and value")
+        return SessionForms(
+            items=[self._copySessionToForm(session) for session in sessions]
+        )
+
+    @endpoints.method(SESSION_QUERY_TIME, SessionForms,
+            path='querySessionTime/{websafeConferenceKey}',
+            http_method='POST', name='querySessionTime')
+    def querySessionTime(self, request):
+        """Return sessions given a conference object, time and type"""
+        conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
+        if not conf:
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % request.websafeConferenceKey)
+        typeList=[item for item in request.sessionType]
+        if typeList:
+            sessions = Session.query(Session.sessionType.IN(typeList),ancestor=conf.key).order(Session.startTime)
+        else:
+            sessions = Session.query(ancestor=conf.key).order(Session.startTime)
+        if (request.operator and request.time):
+            node = ndb.query.FilterNode('startTime',OPERATORS[request.operator], datetime(1970,01,01,request.time,00))
+            sessions = sessions.filter(node)
+        elif (request.operator or request.time):
+            raise endpoints.BadRequestException("You need to define both operator and time")
+        return SessionForms(
+            items=[self._copySessionToForm(session) for session in sessions]
+        )
 
     @endpoints.method(SPEAKER_GET_REQUEST, SessionForms,
             path='getSessionsBySpeaker/{speakerId}',
