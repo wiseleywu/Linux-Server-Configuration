@@ -29,11 +29,12 @@ Please refer to https://github.com/wiseleywu/P1-fresh_tomatoes, this will be mer
 ## 4. Conference application
 - [Download][1] and install Google App Engine SDK for Python
 - Clone this repository
-- Update the value of 'application' in 'app.yaml' to the app ID you have registered in the [Google Developers Console][2] and would like to use to host your instance of this sample
-- Update the values at the top of 'settings.py' to reflect the respective client IDs you have registered in the Developers Console
-- Update the value of CLIENT ID at Line 89 in 'static/js/app.js' to the Web client ID
-- Deploy the app on to local web server by invoking the following command in console: '$ dev_appserver.py ConferenceCentral_Complete/'. Visit the local server address at [localhost:8080][3] (by default)
-- Upload the app to Google App Engine by invoking the following command in console: '$ appcfg.py -A YOUR_PROJECT_ID update ConferenceCentral_Complete/'. Visit the deployed application at https://[YOUR_PROJECT_ID].appspot.com/
+- Update the value of `application` in [app.yaml](Conference_Organization_App/ConferenceCentral_Complete/app.yaml) to the app ID you have registered in the [Google Developers Console][2] and would like to use to host your instance of this sample
+- Update the values at the top of [settings.py](Conference_Organization_App/ConferenceCentral_Complete/settings.py) to reflect the respective client IDs you have registered in the Developers Console
+- Update the value of `CLIENT ID` at Line 89 in [static/js/app.js](Conference_Organization_App/ConferenceCentral_Complete/static/js/app.js) to the Web client ID
+- Deploy the app on to local web server by invoking the following command in console: `$ dev_appserver.py ConferenceCentral_Complete/`. Visit the local server address at [localhost:8080][3] (by default)
+- Upload the app to Google App Engine by invoking the following command in console: `$ appcfg.py -A YOUR_PROJECT_ID update ConferenceCentral_Complete/`. Visit the deployed application at https://YOUR_PROJECT_ID.appspot.com/
+- For design choice explanation of this application, please refer to the [README.md](Conference_Organization_App/ConferenceCentral_Complete/README.md) within the application folder
 
 [1]: https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python
 [2]: https://console.developers.google.com/
