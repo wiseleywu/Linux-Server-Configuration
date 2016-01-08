@@ -58,7 +58,7 @@ class Conference(ndb.Model):
     topics          = ndb.StringProperty(repeated=True)
     city            = ndb.StringProperty()
     startDate       = ndb.DateProperty()
-    month           = ndb.IntegerProperty() # TODO: do we need for indexing like Java?
+    month           = ndb.IntegerProperty()
     endDate         = ndb.DateProperty()
     maxAttendees    = ndb.IntegerProperty()
     seatsAvailable  = ndb.IntegerProperty()
@@ -70,11 +70,11 @@ class ConferenceForm(messages.Message):
     organizerUserId = messages.StringField(3)
     topics          = messages.StringField(4, repeated=True)
     city            = messages.StringField(5)
-    startDate       = messages.StringField(6) #DateTimeField()
+    startDate       = messages.StringField(6)
     month           = messages.IntegerField(7, variant=messages.Variant.INT32)
     maxAttendees    = messages.IntegerField(8, variant=messages.Variant.INT32)
     seatsAvailable  = messages.IntegerField(9, variant=messages.Variant.INT32)
-    endDate         = messages.StringField(10) #DateTimeField()
+    endDate         = messages.StringField(10)
     websafeKey      = messages.StringField(11)
     organizerDisplayName = messages.StringField(12)
 
@@ -116,7 +116,7 @@ class Session(ndb.Model):
     sessionType     = ndb.StringProperty()
     organizerUserId = ndb.StringProperty()
     speakerId       = ndb.IntegerProperty()
-    highlight       = ndb.StringProperty()
+    highlight       = ndb.StringProperty(indexed=False)
     date            = ndb.DateProperty()
     startTime       = ndb.TimeProperty()
     duration_minutes= ndb.IntegerProperty()
@@ -147,10 +147,10 @@ class Speaker(ndb.Model):
     """Speaker -- Session Speaker Object"""
     displayName = ndb.StringProperty(required=True)
     mainEmail = ndb.StringProperty(required=True)
-    sessionKeysToAttend = ndb.StringProperty(repeated=True)
+    # sessionKeysToAttend = ndb.StringProperty(repeated=True)
 
 class SpeakerForm(messages.Message):
     """SpeakerForm -- Speaker outbound form message"""
-    displayName = messages.StringField(1)
+    displayName = messages.StringField(1, required=True)
     mainEmail = messages.StringField(2)
-    sessionKeysToAttend = messages.StringField(3, repeated=True)
+    # sessionKeysToAttend = messages.StringField(3, repeated=True)

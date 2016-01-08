@@ -25,24 +25,15 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import ndb
 
 from models import ConflictException
-from models import Profile
-from models import ProfileMiniForm
-from models import ProfileForm
-from models import StringMessage
-from models import BooleanMessage
-from models import Conference
-from models import ConferenceForm
-from models import ConferenceForms
-from models import ConferenceQueryForm
-from models import ConferenceQueryForms
+from models import Profile, ProfileMiniForm, ProfileForm
+from models import StringMessage, BooleanMessage
+from models import Conference, ConferenceForm, ConferenceForms
+from models import ConferenceQueryForm, ConferenceQueryForms
 from models import TeeShirtSize
 from models import Session, SessionForm, SessionForms, SessionQueryForm
 from models import Speaker, SpeakerForm
 
-from settings import WEB_CLIENT_ID
-from settings import ANDROID_CLIENT_ID
-from settings import IOS_CLIENT_ID
-from settings import ANDROID_AUDIENCE
+from settings import WEB_CLIENT_ID, ANDROID_CLIENT_ID, IOS_CLIENT_ID, ANDROID_AUDIENCE
 
 from utils import getUserId
 
@@ -377,6 +368,7 @@ class ConferenceApi(remote.Service):
                 conferences]
         )
 
+
     @endpoints.method(CONF_GET_SIMILAR, ConferenceForms,
             path='querySimilarConferences/{websafeConferenceKey}',
             http_method='POST',
@@ -388,9 +380,12 @@ class ConferenceApi(remote.Service):
             raise endpoints.NotFoundException(
                 'No conference found with key: %s' % request.websafeConferenceKey)
         prof = conf.key.parent().get()
-        node = ndb.query.FilterNode(request.field, OPERATORS[request.operator], request.value)
-        conferences = Conference.query(ancestor=prof.key).filter(Conference.key!=conf.key).filter(node)
-        # return individual ConferenceForm object per Conference
+        conferences = Conference.query(ancestor=prof.key).filter(Conference.key!=conf.key)
+        if (request.field and request.operator and request.value):
+            node = ndb.query.FilterNode(request.field, OPERATORS[request.operator], request.value)
+            conferences = conferences.filter(node)
+        elif (request.field or request.operator or request.value):
+            raise endpoints.BadRequestException("You need to define field, operator, and value")
         return ConferenceForms(
                 items=[self._copyConferenceToForm(conf, prof.mainEmail) for conf in \
                 conferences]
@@ -640,22 +635,17 @@ class ConferenceApi(remote.Service):
         if not user:
             raise endpoints.UnauthorizedException('Authorization required')
         user_id = getUserId(user)
-        # find parent conference
         conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
-        # check that conference exists
         if not conf:
             raise endpoints.NotFoundException(
                 'No conference found with key: %s' % request.websafeConferenceKey)
-        # check that user is owner
         if user_id != conf.organizerUserId:
             raise endpoints.ForbiddenException(
                 'Only the owner can add session to the conference')
-        # copy SessionForm/ProtoRPC Message into dict
         data = {field.name: getattr(request, field.name) for field in request.all_fields()}
         wsck=data['websafeConferenceKey']
         del data['websafeKey']
         del data['websafeConferenceKey']
-        # add default values for those missing (both data model & outbound Message)
         for df in SESSION_DEFAULTS:
             if data[df] in (None, []):
                 data[df] = SESSION_DEFAULTS[df]
@@ -669,8 +659,6 @@ class ConferenceApi(remote.Service):
         s_key = ndb.Key(Session, s_id, parent=c_key)
         data['key'] = s_key
         data['organizerUserId'] = request.organizerUserId = user_id
-
-        # creation of Conference & return (modified) ConferenceForm
         Session(**data).put()
         if data['speakerId']:
             taskqueue.add(params={'wsck':wsck, 'speakerId':data['speakerId']},
@@ -847,7 +835,7 @@ class ConferenceApi(remote.Service):
             path='getSessionsBySpeaker/{speakerId}',
             http_method='GET', name='getSessionsBySpeaker')
     def getSessionsBySpeaker(self,request):
-        """Return sessions given a session type"""
+        """Return sessions given a speakerId"""
         speaker=ndb.Key(Speaker, request.speakerId).get()
         sessions = Session.query()
         sessions = sessions.filter(getattr(Session, 'speakerId')==request.speakerId)
@@ -901,7 +889,7 @@ class ConferenceApi(remote.Service):
     @endpoints.method(SPEAKER_GET_REQUEST, SpeakerForm, path='speaker/{speakerId}',
             http_method='GET', name='getSpeaker')
     def getSpeaker(self, request):
-        """Get Speaker Object given websafeSpeakerKey"""
+        """Get Speaker Object given the speakerId"""
         speaker=ndb.Key(Speaker, request.speakerId).get()
         return self._copySpeakerToForm(speaker)
 
