@@ -64,7 +64,7 @@ class AntibodyLot(Base):
     vialVolume = Column(Float, nullable=False)
     vialNumber = Column(Integer, nullable=False)
     antibody_id = Column(Integer, ForeignKey('antibody.id'))
-    antibody = relationship('Antibody')
+    antibody = relationship('Antibody', cascade='delete')
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
 
@@ -119,7 +119,7 @@ class CytotoxinLot(Base):
     vialVolume = Column(Float, nullable=False)
     vialNumber = Column(Integer, nullable=False)
     cytotoxin_id = Column(Integer, ForeignKey('cytotoxin.id'))
-    cytotoxin = relationship('Cytotoxin')
+    cytotoxin = relationship('Cytotoxin', cascade='delete')
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
 
@@ -166,7 +166,7 @@ class AdcLot(Base):
     vialVolume = Column(Float, nullable=False)
     vialNumber = Column(Integer, nullable=False)
     adc_id = Column(Integer, ForeignKey('adc.id'))
-    adc = relationship('Adc')
+    adc = relationship('Adc', cascade='delete')
     antibodylot_id = Column(Integer, ForeignKey('antibody_lot.id'))
     antibodylot = relationship(AntibodyLot)
     cytotoxinlot_id = Column(Integer, ForeignKey('cytotoxin_lot.id'))

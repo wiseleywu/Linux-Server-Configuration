@@ -22,10 +22,10 @@ def createUser(name, email, picture):
 	session.add(user)
 	session.commit()
 	newUserID = session.query(User).filter_by(email=email).one().id
-    if picture.startswith("https"):
+	if picture.startswith("https"):
 		attach_picture_url(User, newUserID, picture)
-    else:
-	attach_picture(User, newUserID, picture)
+	else:
+		attach_picture(User, newUserID, picture)
 
 
 # Add Antibody

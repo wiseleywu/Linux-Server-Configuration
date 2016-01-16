@@ -486,7 +486,7 @@ def createTypeLot(dbtype, item_id):
                                cytotoxin_id=item_id,
                                user_id=user_id)
         else:
-            new = AdcLot(date=datetime.datetime.strptime(request.form['date'].replace('-',' '), '%Y %m %d'),
+            new = AdcLot(date=datetime.datetime.strptime(request.form['date'].replace('-', ' '), '%Y %m %d'),
                          aggregate=request.form['aggregate'],
                          endotoxin=request.form['endotoxin'],
                          concentration=request.form['concentration'],
@@ -602,7 +602,7 @@ def delete(dbtype, item_id):
     if request.method == 'POST':
         session.delete(deleteItem)
         session.commit()
-        if dbtype[-3:].lower() == 'lot':
+        if dbtype.endswith('Lot'):
             flash('%s Lot Deleted' % dbtype[:-3].capitalize())
             return redirect(url_for(dbtype[:-3]))
         else:
@@ -708,6 +708,16 @@ def allowed_file(filename):
 
 
 def attach_picture(table, item_id, location):
+    """
+    A helper function used in populator.py to upload picture to the db
+    Args:
+        table: The category which the picture belongs to
+        item_id: The category's id number which the picture should be
+                 uploaded to
+        location: local directory of where the picture is found
+    Returns:
+        None
+    """
     try:
         item = session.query(table).filter_by(id=item_id).one()
         with store_context(fs_store):
@@ -721,7 +731,7 @@ def attach_picture(table, item_id, location):
 
 def attach_picture_url(table, item_id, location):
     """
-    A helper function used in populator.py to upload picture to the db
+    A helper function used in populator.py to upload picture to the db from web
     Args:
         table: The category which the picture belongs to
         item_id: The category's id number which the picture should be
