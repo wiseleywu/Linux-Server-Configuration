@@ -10,23 +10,25 @@
 <!-- END PRE-REQUISITES FOR GOOGLE SIGN IN -->
 </head>
 <body>
-  <div class="modal-body sign-in">
-    <div>
-      <h1 class="sign-in-text"><strong>Please choose the following options to sign in</strong></h1>
-    </div>
-    <fb:login-button size="xlarge" scope="public_profile,email" onlogin="sendTokenToServer();" class="btn btn-block">
-      <a href='javascript:sendTokenToServer()'>Sign in</a>
-    </fb:login-button>
-    <div class="btn btn-block">
-      <span class="g-signin"
-        data-scope="openid email"
-        data-clientid="112174231466-2eq62a94fmpg5hde3t1pat8e4bo4k9u4.apps.googleusercontent.com"
-        data-redirecturi="postmessage"
-        data-accesstype="offline"
-        data-cookiepolicy="single_host_origin"
-        data-callback="signInCallback"
-        data-approvalprompt="force">
-      </span>
+  <div class="sign-in">
+    <div class="modal-body">
+      <div>
+        <h1 class="sign-in-text"><strong>Please choose the following options to sign in</strong></h1>
+      </div>
+      <fb:login-button size="xlarge" scope="public_profile,email" onlogin="sendTokenToServer();" class="btn btn-block">
+        <a href='javascript:sendTokenToServer()'>Sign in</a>
+      </fb:login-button>
+      <div class="btn btn-block">
+        <span class="g-signin"
+          data-scope="openid email"
+          data-clientid="112174231466-2eq62a94fmpg5hde3t1pat8e4bo4k9u4.apps.googleusercontent.com"
+          data-redirecturi="postmessage"
+          data-accesstype="offline"
+          data-cookiepolicy="single_host_origin"
+          data-callback="signInCallback"
+          data-approvalprompt="force">
+        </span>
+      </div>
     </div>
   </div>
 

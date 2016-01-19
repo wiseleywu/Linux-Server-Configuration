@@ -15,13 +15,13 @@ table[data-sortable] th, table[data-sortable] td {
   padding: 10px;
 }
 
-.sign-in {
-  background-image: url("http://localhost:5000/static/images/dna.jpg");
+div.sign-in {
+  background-image: url("http://52.24.45.112/static/images/dna.jpg");
   background-position: center;
   background-size: 100% auto;
 }
 
-.sign-in-text {
+h1.sign-in-text {
   color: black;
   text-align: center;
   text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;

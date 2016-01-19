@@ -149,18 +149,18 @@ def createADCLot():
         session.add(adclot)
         session.commit()
 
-if __name__ == '__main__':
-    createUser('Wiseley Wu', 'wiseleywu@gmail.com', 'https://lh6.googleusercontent.com/-45KCJFuShPk/AAAAAAAAAAI/AAAAAAAArRw/E7__AYvGSOQ/photo.jpg')
-    createUser('John Doe', 'john.doe@gmail.com', '/vagrant/static/images/user.png')
-    createUser('Jane Doe', 'jane.doe@gmail.com', '/vagrant/static/images/user.png')
-    createAntibody()
-    createAntibodyLot()
-    createCytotoxin()
-    createCytotoxinLot()
-    createADC()
-    createADCLot()
-    for x in range(1,6):
-        attach_picture(Antibody, x, '/vagrant/static/images/antibody.png')
-        attach_picture(Cytotoxin, x, '/vagrant/static/images/cytotoxin.png')
-        attach_picture(Adc, x, '/vagrant/static/images/adc.png')
-    print 'Database Populated'
+
+createUser('Wiseley Wu', 'wiseleywu@gmail.com', 'https://lh6.googleusercontent.com/-45KCJFuShPk/AAAAAAAAAAI/AAAAAAAArRw/E7__AYvGSOQ/photo.jpg')
+createUser('John Doe', 'john.doe@gmail.com', '/var/www/FlaskApp/FlaskApp/static/images/user.png')
+createUser('Jane Doe', 'jane.doe@gmail.com', '/var/www/FlaskApp/FlaskApp/static/images/user.png')
+createAntibody()
+createAntibodyLot()
+createCytotoxin()
+createCytotoxinLot()
+createADC()
+createADCLot()
+for x in range(1,6):
+    attach_picture(Antibody, x, '/var/www/FlaskApp/FlaskApp/static/images/antibody.png')
+    attach_picture(Cytotoxin, x, '/var/www/FlaskApp/FlaskApp/static/images/cytotoxin.png')
+    attach_picture(Adc, x, '/var/www/FlaskApp/FlaskApp/static/images/adc.png')
+print 'Database Populated'

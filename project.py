@@ -18,13 +18,14 @@ from oauth2client.client import FlowExchangeError
 from sqlalchemy import create_engine, MetaData, Table, desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy_imageattach.stores.fs import FileSystemStore
+from sqlalchemy_imageattach.stores.fs import FileSystemStore, HttpExposedFileSystemStore
 from sqlalchemy_imageattach.context import store_context, push_store_context
 from sqlalchemy_imageattach.context import pop_store_context
 
 from database_setup import Base, User, UserImg, Antibody, Cytotoxin
 from database_setup import AntibodyImg, AntibodyLot
 from database_setup import CytotoxinImg, CytotoxinLot, Adc, AdcLot, AdcImg
+
 
 # Global variables
 APPLICATION_NAME = "Biologics Catalog"
@@ -39,12 +40,14 @@ csrf = SeaSurf(app)
 # app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 CLIENT_ID = json.loads(
-    open('client_secrets.json', 'r').read())['web']['client_id']
+    open('/var/www/FlaskApp/FlaskApp/client_secrets.json', 'r').read())['web']['client_id']
 
 # Location of where the pictures will be uploaded and their web url
-fs_store = FileSystemStore(
-    path='static/images/',
-    base_url='http://localhost:5000/static/images/')
+fs_store = HttpExposedFileSystemStore(
+    path='/var/www/FlaskApp/FlaskApp/static/images/',
+    prefix='static/images/')
+app.wsgi_app = fs_store.wsgi_middleware(app.wsgi_app)
+
 
 # Setting up postgres Database and SQL Alchemy's ORM
 engine = create_engine(
@@ -55,6 +58,7 @@ meta = MetaData(bind=engine)
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+# import populator
 
 @app.route('/login')
 def showLogin():
@@ -76,12 +80,12 @@ def gconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     # Obtain authorization code, now compatible with Python3
-    request.get_data()
+#    request.get_data()
     code = request.data.decode('utf-8')
 
     try:
         # Upgrade the authorization code into a credentials object
-        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+        oauth_flow = flow_from_clientsecrets('/var/www/FlaskApp/FlaskApp/client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
@@ -173,10 +177,10 @@ def fbconnect():
     access_token = request.data
     print "access token received %s " % access_token
 
-    app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
+    app_id = json.loads(open('/var/www/FlaskApp/FlaskApp/fb_client_secrets.json', 'r').read())[
         'web']['app_id']
     app_secret = json.loads(
-        open('fb_client_secrets.json', 'r').read())['web']['app_secret']
+        open('/var/www/FlaskApp/FlaskApp/fb_client_secrets.json', 'r').read())['web']['app_secret']
     url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
         app_id, app_secret, access_token)
     h = httplib2.Http()
@@ -438,8 +442,13 @@ def createType(dbtype):
         # upload image
         image = request.files['picture']
         if image and allowed_file(image.filename):
-            with store_context(fs_store):
-                new.picture.from_file(image)
+            try:
+	        with store_context(fs_store):
+                    new.picture.from_file(image)
+	    except Exception:
+		session.rollback()
+		raise
+            session.commit()
         # prevent user uploading unsupported file type
         elif image and not allowed_file(image.filename):
             flash('Unsupported file detected. No image has been uploaded.')
@@ -528,14 +537,26 @@ def editType(dbtype, item_id):
                 # set attribute of query object with request form data
                 setattr(editedItem, column.name, request.form[column.name])
         session.add(editedItem)
-        session.commit()
+	try:
+            session.commit()
+	except Exception:
+	    session.rollback()
+            raise
+	    flash('error')
+            return redirect(url_for(dbtype))
         flash('%s Edited' % dbtype.capitalize())
 
         # upload image
         image = request.files['picture']
         if image and allowed_file(image.filename):
-            with store_context(fs_store):
-                editedItem.picture.from_file(image)
+	    try:
+                with store_context(fs_store):
+                    editedItem.picture.from_file(image)
+	    except Exception:
+		session.rollback()
+		raise
+                flash('error')
+		return redirect(url_for(dbtype))
         # prevent user uploading unsupported file type
         elif image and not allowed_file(image.filename):
             flash('Unsupported file detected. No image has been uploaded.')
