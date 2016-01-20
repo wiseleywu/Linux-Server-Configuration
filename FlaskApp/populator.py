@@ -1,12 +1,19 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from database_setup import Base, User, UserImg, Antibody, Cytotoxin, AntibodyImg, AntibodyLot, CytotoxinImg, CytotoxinLot, Adc, AdcLot, AdcImg
+import datetime
+import os
+from random import randint, random, choice
+
 from sqlalchemy_imageattach.entity import Image, image_attachment
 from sqlalchemy_imageattach.context import store_context
-from random import randint
-from project import app, fs_store, session, attach_picture_url, attach_picture
-import datetime
-import random
+
+from database_setup import Base, User, Antibody, Cytotoxin, Adc
+from database_setup import AntibodyLot, CytotoxinLot, AdcLot
+from database_setup import UserImg, AntibodyImg, CytotoxinImg, AdcImg
+
+from helper import attach_picture, attach_picture_url
+
+from initDB import session
+
+from settings import app_path, fs_store
 
 
 def createRandomDate():
@@ -150,17 +157,18 @@ def createADCLot():
         session.commit()
 
 
-createUser('Wiseley Wu', 'wiseleywu@gmail.com', 'https://lh6.googleusercontent.com/-45KCJFuShPk/AAAAAAAAAAI/AAAAAAAArRw/E7__AYvGSOQ/photo.jpg')
-createUser('John Doe', 'john.doe@gmail.com', '/var/www/FlaskApp/FlaskApp/static/images/user.png')
-createUser('Jane Doe', 'jane.doe@gmail.com', '/var/www/FlaskApp/FlaskApp/static/images/user.png')
-createAntibody()
-createAntibodyLot()
-createCytotoxin()
-createCytotoxinLot()
-createADC()
-createADCLot()
-for x in range(1,6):
-    attach_picture(Antibody, x, '/var/www/FlaskApp/FlaskApp/static/images/antibody.png')
-    attach_picture(Cytotoxin, x, '/var/www/FlaskApp/FlaskApp/static/images/cytotoxin.png')
-    attach_picture(Adc, x, '/var/www/FlaskApp/FlaskApp/static/images/adc.png')
-print 'Database Populated'
+if __name__ == '__main__':
+	createUser('Wiseley Wu', 'wiseleywu@gmail.com', 'https://lh6.googleusercontent.com/-45KCJFuShPk/AAAAAAAAAAI/AAAAAAAArRw/E7__AYvGSOQ/photo.jpg')
+	createUser('John Doe', 'john.doe@gmail.com', os.path.join(app_path, 'static/images/user.png'))
+	createUser('Jane Doe', 'jane.doe@gmail.com', os.path.join(app_path, 'static/images/user.png'))
+	createAntibody()
+	createAntibodyLot()
+	createCytotoxin()
+	createCytotoxinLot()
+	createADC()
+	createADCLot()
+	for x in range(1,6):
+	    attach_picture(Antibody, x, os.path.join(app_path, 'static/images/antibody.png'))
+	    attach_picture(Cytotoxin, x, os.path.join(app_path, 'static/images/cytotoxin.png'))
+	    attach_picture(Adc, x, os.path.join(app_path, 'static/images/adc.png'))
+	print 'Database Populated'
