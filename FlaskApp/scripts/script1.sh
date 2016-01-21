@@ -12,7 +12,9 @@ apt-get install -y unattended-upgrades
 apt-get install -y postgresql python-psycopg2
 apt-get install -y python-flask python-sqlalchemy
 apt-get install -y python-pip
-apt-get install -y git
+apt-get install -y libapache2-mod-wsgi python-dev
+apt-get install -y apache2
+apt-get install -y libmagickwand-dev
 pip install werkzeug==0.8.3
 pip install Flask-Login==0.1.3
 pip install SQLAlchemy-ImageAttach
@@ -25,9 +27,8 @@ pip install flask-httpauth
 pip install flask-seasurf
 
 # install system monitoring tool
-curl -L http://bit.ly/glances | /bin/bash # <--do i actually need this
+# curl -L http://bit.ly/glances | /bin/bash # <--do i actually need this
 pip install glances
-
 # install fail2ban to monitor malicious attack
 apt-get install -y fail2ban
 # install sendmail to send e-mail with fail2ban status
@@ -56,9 +57,21 @@ sed -i "s/${word}/${rep}/" /etc/fail2ban/jail.local
 
 # change default action to include e-mail (+ relevant log) on top of ban
 sed -i "s/(action_)/(action_mwl)/" /etc/fail2ban/jail.local
+# change SSH port to monitor to 2200, tell fail2ban to look for ufw-ssh for actions
+sed -i"" '/\[ssh\]/,/\[dropbear\]/ s/port     = ssh/port     = 2200/' /etc/fail2ban/jail.local
+sed -i '/port     = 2200/a banaction = ufw-ssh' /etc/fail2ban/jail.local
+# enable apache JAIL, tell fail2ban to look for ufw-apache for actions
+sed -i"" '/\[apache\]/,/\[apache-multiport\]/ s/enabled  = false/enabled  = true/' /etc/fail2ban/jail.local
+sed -i '/\[apache\]/a \banaction = ufw-apache' /etc/fail2ban/jail.local
+
+# create ufw-ssh.conf for fail2ban to use on SSH-related traffic
+echo -e "[Definition]\nactionstart = \nactionstop = \nactioncheck = \nactionban = ufw insert 1 deny from <ip> to any app OpenSSH\nactionunban = ufw delete deny from <ip> to any app OpenSSH" >> /etc/fail2ban/action.d/ufw-ssh.conf
+# create ufw-apache.conf for fail2ban to use on SSH-related traffic
+echo -e '[Definition]\nactionstart = \nactionstop = \nactioncheck = \nactionban = ufw insert 2 deny from <ip> to any app "Apache Full"\nactionunban = ufw delete deny from <ip> to any app "Apache Full"' >> /etc/fail2ban/action.d/ufw-apache.conf
 
 # remove and create new file "10periodic" to configure auto-install interval
-echo -e "APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Download-Upgradeable-Packages "1";\nAPT::Periodic::AutocleanInterval "7";\nAPT::Periodic::Unattended-Upgrade "1";" >> /etc/apt/apt.conf.d/10periodic
+rm /etc/apt/apt.conf.d/10periodic
+echo -e 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Download-Upgradeable-Packages "1";\nAPT::Periodic::AutocleanInterval "7";\nAPT::Periodic::Unattended-Upgrade "1";' >> /etc/apt/apt.conf.d/10periodic
 # add a new user named grader, input password when prompted
 adduser --gecos "Udacity_Grader" grader
 # change grader's group from "group" to "sudo"
@@ -98,3 +111,7 @@ ufw allow www
 ufw allow ntp
 # enable firewall
 ufw enable
+# copy the next script to grader's directory
+cp FlaskApp/scripts/script2.sh /home/grader/script2.sh
+# logout
+exit

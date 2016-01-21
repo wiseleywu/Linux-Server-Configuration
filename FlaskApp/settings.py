@@ -7,7 +7,7 @@ from sqlalchemy_imageattach.stores.fs import HttpExposedFileSystemStore
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'bmp'])
 
 # absolute path of the app on server
-app_path = '/var/www/'
+app_path = '/var/www/FlaskApp/FlaskApp/'
 
 # variables and path for postgres database
 user = 'catalog'

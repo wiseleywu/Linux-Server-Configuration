@@ -64,10 +64,10 @@ def createAntibodyLot():
     for x in range(20):
         antibodylot = AntibodyLot(
                       date=createRandomDate(),
-                      aggregate=randint(0, 5)+round(random.random(), 2),
-                      endotoxin=randint(0, 10)+round(random.random(), 2),
-                      concentration=randint(0, 10)+round(random.random(), 2),
-                      vialVolume=random.choice([1, 0.2, 0.5]),
+                      aggregate=randint(0, 5)+round(random(), 2),
+                      endotoxin=randint(0, 10)+round(random(), 2),
+                      concentration=randint(0, 10)+round(random(), 2),
+                      vialVolume=choice([1, 0.2, 0.5]),
                       vialNumber=randint(1, 100),
                       antibody_id=randint(1, 5),
                       user_id=randint(1, 3))
@@ -88,9 +88,9 @@ def createCytotoxin():
 def createCytotoxinLot():
     for x in range(20):
         cytotoxinlot = CytotoxinLot(date=createRandomDate(),
-                                    purity=randint(80, 99)+round(random.random(), 2),
-									concentration=randint(0,10)+round(random.random(), 2),
-									vialVolume=random.choice([1, 0.2, 0.5]),
+                                    purity=randint(80, 99)+round(random(), 2),
+									concentration=randint(0,10)+round(random(), 2),
+									vialVolume=choice([1, 0.2, 0.5]),
 									vialNumber=randint(1, 100),
 									cytotoxin_id=randint(1, 5),
 									user_id=randint(1, 3))
@@ -135,19 +135,19 @@ def createADCLot():
     for x in range(20):
         error = True
         while error:
-            randomlot = random.choice(lot)
+            randomlot = choice(lot)
             try:
-                id1 = random.choice(antibodylot()[randomlot-1])
-                id2 = random.choice(cytotoxinlot()[randomlot-1])
+                id1 = choice(antibodylot()[randomlot-1])
+                id2 = choice(cytotoxinlot()[randomlot-1])
             except IndexError:
                 lot.remove(randomlot)
             else:
 				error = False
 				adclot = AdcLot(date=createRandomDate(),
-					  aggregate=randint(0, 5)+round(random.random(), 2),
-					  endotoxin=randint(0, 10)+round(random.random(), 2),
-					  concentration=randint(0, 10)+round(random.random(), 2),
-					  vialVolume=random.choice([1, 0.2, 0.5]),
+					  aggregate=randint(0, 5)+round(random(), 2),
+					  endotoxin=randint(0, 10)+round(random(), 2),
+					  concentration=randint(0, 10)+round(random(), 2),
+					  vialVolume=choice([1, 0.2, 0.5]),
 					  vialNumber=randint(1, 100),
 					  adc_id=randomlot,
 					  antibodylot_id=id1,
