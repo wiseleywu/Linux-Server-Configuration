@@ -3,8 +3,9 @@
 # move git directory to where the app will be hosted
 sudo mv /root/FlaskApp/ /var/www/
 
-# sudo service apache restart
-# sudo a2enmod wsgi
+# Enable wsgi, restart apache
+sudo a2enmod wsgi
+sudo service apache2 restart
 
 cd /var/www
 # copy FlaskApp.conf to the approriate location
@@ -22,18 +23,16 @@ sudo python FlaskApp/FlaskApp/populator.py
 sudo chmod -R 777 FlaskApp/FlaskApp/static/images/
 # enable virtual host of FlaskApp, then restart apache
 sudo a2ensite FlaskApp
-sudo service apache restart
+sudo service apache2 restart
 # at this point, the web app should be functional
 
 # create .ssh directory in grader's home
 cd
 mkdir .ssh
 
-# run the follow in local environment, create ssh key pair
-ssh-keygen # create a key-pair called secured_key.rsa either with passphrase
-
+# run ssh-keygen in local environment, create ssh key pair
 # copy the public key generated and paste it to .ssh/authorized_keys
-echo "Paste the public key you have generated from your local environment:"
+echo "Run 'ssh-keygen' in your local environment, then paste the public key you have generated below:"
 read varname
 echo -e $varname >> .ssh/authorized_keys
 
@@ -47,5 +46,3 @@ rep="PasswordAuthentication no"
 sudo sed -i "s/${word}/${rep}/" /etc/ssh/sshd_config
 # restart ssh again
 sudo service ssh restart
-# loggout, try to relogin with keypharse
-ssh -p 2200 -i ~/.ssh/udacity_key.rsa grader@52.11.12.49

@@ -27,14 +27,11 @@ pip install flask-httpauth
 pip install flask-seasurf
 
 # install system monitoring tool
-# curl -L http://bit.ly/glances | /bin/bash # <--do i actually need this
 pip install glances
 # install fail2ban to monitor malicious attack
 apt-get install -y fail2ban
 # install sendmail to send e-mail with fail2ban status
 apt-get install -y sendmail
-# allow the server to automatically set up our firewall rules at boot
-# apt-get install -y iptables-persistent
 
 # create a copy of jail.conf for fail2ban
 cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
@@ -113,5 +110,3 @@ ufw allow ntp
 ufw enable
 # copy the next script to grader's directory
 cp FlaskApp/scripts/script2.sh /home/grader/script2.sh
-# logout
-exit
