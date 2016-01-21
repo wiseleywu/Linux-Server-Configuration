@@ -11,29 +11,13 @@ The backend of this applicaion uses Postgres Database to organize users and all 
 - `populator.py` - Script used to populate the database with pred-defined users (including you!) and demo entries. You can modify the first user to yourself to simulate what it would look like to have several entries created by you in the application. (Instrution below)
 - `project.py` - The flask framework and its interface with the database (via ORM) and the html website template (via jinja2) are defined here. There are also some helper functions here to check file extensions and upload images to the application. `Populator.py` required some codes here to run.
 
-## Front End
-- [Bootstrap][4]
-- [sortable][5]
-- [jQuery][6]
-- [TWBScolor][7]
-
-## Back End
-- [python-flask][2]
-- [flask-seasurf][8]
-- [python-psycopg2][9]
-- [python-sqlalchemy][3]
-- [SQLAlchemy-ImageAttach][10]
-- [oauth2client][11]
-
-## Endpoints
- - JSON
-  - Access this from `/category/json` or `/category/lot/json`, where category could be antibody, cytotoxin, or adc
- - XML
-  - Access this from `/category/xml` or `/category/lot/xml`, where category could be antibody, cytotoxin, or adc
-
 ## Instructions
 - Clone this repository
-- Install [Vagrant][12] and [VirtualBox][13]
+- Obtain RSA key of the server, save it to ~/.ssh (if applicable)
+- Use `chmod 600 ~/.ssh/udacity_key.rsa` to configure file permission locally
+- Use `ssh -i ~/.ssh/udacity_key.rsa root@ip-address` to login to remote server as root using RSA key
+- Run `script1.sh`
+
 - Optional to test out Google Oauth 2.0 Login
   - Create a new project from [Google Developers Console][14]. Go to API Manager -> Credentials in the Developers Console to create an OAuth client ID for web application use.
   - Add `http://localhost:5000` under "Authorized Javascript origins"
