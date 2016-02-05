@@ -1,10 +1,13 @@
 # Linux Server Configuration
 This project involved deploying a previously developed web application to Amazon's Elastic Compute Cloud. The web app will be hosted in a Ubuntu virtual machine, and this repo included all the necessary information and scripts to deploy a functional version of [Biologics-Catalog][1] to the public web with Oauth login and CRUD operations while being protected against a variety of common attacks.
 
-## Information for Udacity grader
-- IP address: `52.27.179.148`
-- SSH port: `2200`
-- Web application URL: http://ec2-52-27-179-148.us-west-2.compute.amazonaws.com/
+## Web App Location
+- Currently, the web app could be reached by going to `ec2-54-149-58-225.us-west-2.compute.amazonaws.com`. I have also registered a domain name at `biologics-catalog.com`, but I had a brain fart and registered it at Google Domains instead of Amazon Route 53 - so I can't properly route traffic from the new domain name to my current web app location until I can transfer the domain name to Amazon (in 60 days). I have forwarded the domain name to the Amazon EC2 instance for now.
+
+## ~~Information for Udacity grader~~
+- ~~IP address: `52.27.179.148`~~
+- ~~SSH port: `2200`~~
+- ~~Web application URL: `http://ec2-52-27-179-148.us-west-2.compute.amazonaws.com/`~~
 
 ## Requirements
 - git
